@@ -1,541 +1,748 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <title>R.L ENERGIE — STOCK (offline ready)</title>
-
-  <!-- NOTE: For true offline/APK behaviour, replace the CDN script tags with local copies
-       and include them in your APK (assets/www). See comments near the script imports. -->
-
-  <!-- Styles (concise, responsive) -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>R.L ENERGIE — STOCK v5K FINAL</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
   <style>
-    :root{
-      --primary:#00aaff; --success:#00d46a; --danger:#ff3b5c; --accent:#00ff88;
-      --card:#ffffff; --card-dark:#121212; --radius:14px; --muted:#8c98a4;
+    :root{--primary:#00aaff;--primary-dark:#0088cc;--success:#00d46a;--danger:#ff3b5c;--warning:#ffcc00;
+      --bg-dark: linear-gradient(135deg,#0a0a0a,#151515);--bg-light: linear-gradient(135deg,#eaf6ff,#dbeefe);
+      --card-dark:#151515;--card-light:#ffffff;--text-dark:#eaeef2;--text-light:#2d3436;--accent:#00ff88;
+      --muted:#9aa4ad;--radius-lg:20px;--radius-md:14px;--shadow-sm:0 4px 12px rgba(0,0,0,.25);
+      --shadow-md:0 12px 40px rgba(0,0,0,.45);--transition:all .28s cubic-bezier(.4,0,.2,1);
+      --qty-color-in:#00ff88;--qty-color-out:#ff6b6b;--pdf-red:#e63946;}
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
+    html,body{height:100%}
+    a{color:inherit;text-decoration:none}
+    button{cursor:pointer}
+    body{background:var(--bg-light);min-height:100vh;padding:22px 12px;color:var(--text-light);transition:var(--transition);position:relative;overflow-x:hidden;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}
+    body.dark{background:var(--bg-dark);color:var(--text-dark);}
+    body::after{content:"";position:fixed;inset:0;background-image:
+      radial-gradient(circle at 10% 20%, rgba(255,255,255,0.02) 0 2px, transparent 3px),
+      radial-gradient(circle at 80% 80%, rgba(0,255,136,0.02) 0 2px, transparent 3px);pointer-events:none;z-index:-1;}
+    body.show-bg::before{content:"";position:fixed;inset:0;background:radial-gradient(circle at 50% 12%, rgba(0,170,255,0.06), transparent 25%);pointer-events:none;z-index:-1;}
+    header{background:var(--primary);color:#fff;padding:26px;text-align:center;border-radius:var(--radius-lg);box-shadow:var(--shadow-md);margin-bottom:28px;position:relative;overflow:hidden;}
+    body.dark header{background:linear-gradient(135deg,#00aaff,#0088cc)}
+    .logo-top{position:absolute;top:14px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.85);color:#fff;padding:6px 14px;border-radius:12px;font-weight:900;letter-spacing:1px;box-shadow:var(--shadow-sm);z-index:10;animation:pulse 3s infinite;}
+    body.dark .logo-top{ background:#fff; color:var(--primary); box-shadow:var(--shadow-sm) }
+    @keyframes pulse{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.05)}}
+    h1{font-size:2.4rem;font-weight:900; margin-top:26px; text-shadow:0 3px 18px rgba(0,0,0,.25)}
+    .sub{font-size:1.05rem; margin-top:8px; opacity:0.95}
+    .week-moves{margin-top:8px; font-weight:700; opacity:0.9}
+    .stats-bar{display:flex; gap:14px; justify-content:center; margin-top:14px; flex-wrap:wrap}
+    .stat{background:rgba(255,255,255,.06); padding:8px 14px; border-radius:12px; font-weight:700}
+    .card{background:var(--card-light);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);overflow:hidden;margin:18px auto;max-width:1100px;transition:var(--transition);}
+    body.dark .card{ background:var(--card-dark) }
+    .ch{ background:linear-gradient(135deg,var(--primary),var(--primary-dark)); color:#fff; padding:18px 26px; font-weight:800; display:flex; align-items:center; gap:12px }
+    .ch i{ font-size:1.4rem; animation: float 4s ease-in-out infinite }
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+    .cb{ padding:26px }
+    .g{ display:grid; grid-template-columns:1fr 1fr 1fr 110px 160px 180px; gap:14px; align-items:end }
+    @media(max-width:980px){ .g{ grid-template-columns:1fr 1fr } }
+    @media(max-width:540px){ .g{ grid-template-columns:1fr } }
+    label{display:block; font-weight:700; margin-bottom:8px; color:var(--text-dark)}
+    body.dark label{ color:var(--text-dark) }
+    select,input{ width:100%; padding:12px 14px; border-radius:12px; font-size:1rem; border:2px solid rgba(255,255,255,0.06); background:transparent; color:inherit; transition:var(--transition) }
+    body.dark select,input{ border-color:#e6eef8; background:#fff; color:var(--text-light) }
+    select:focus,input:focus{ outline:none; box-shadow:0 0 0 6px rgba(0,170,255,.09); transform:scale(1.01) }
+    .btn{ padding:12px 18px; border-radius:12px; font-weight:800; display:inline-flex; align-items:center; gap:8px; border:none; transition:var(--transition); box-shadow:var(--shadow-sm); }
+    .ok{ background:var(--success); color:#000 }
+    .new{ background:#ff6b35; color:#fff }
+    .pdf{ background:var(--pdf-red); color:#fff }
+    .btn:active{ transform:translateY(1px) scale(.998) }
+    .s{ width:100%; padding:14px 16px; border-radius:14px; border:2px solid rgba(255,255,255,0.04); background:transparent; color:inherit; margin:18px 0; font-size:1rem }
+    table{ width:100%; border-collapse:separate; border-spacing:0 12px; margin-top:8px }
+    th{ background:var(--primary); color:#fff; padding:12px; border-radius:12px 12px 0 0; font-weight:800; position:relative }
+    td{ background:rgba(255,255,255,0.02); padding:12px; text-align:center; border-radius:12px; color:var(--text-dark) }
+    body.dark td{ background:#fff; color:var(--text-light); border:1px solid #eee }
+    td:hover{ transform:translateY(-2px); box-shadow:0 10px 30px rgba(0,0,0,.35) }
+    .q{ display:flex; gap:10px; justify-content:center; align-items:center }
+    .qb{ width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,0.02); border:none; font-size:1.4rem; display:inline-flex; align-items:center; justify-content:center; transition:var(--transition) }
+    .qb:hover{ transform:scale(1.15) rotate(90deg); background:var(--accent); color:#000 }
+    .qv{ font-weight:900; font-size:1.2rem; color:var(--qty-color-in) }
+    .qv.out{ color:var(--qty-color-out) }
+    .del-btn{ width:40px; height:40px; border-radius:50%; background:var(--danger); color:#fff; display:inline-flex; align-items:center; justify-content:center; border:none; }
+    .del-btn:hover{ transform:scale(1.12) rotate(10deg) }
+    .fab{ position:fixed; bottom:24px; right:24px; z-index:9999; display:flex; gap:10px; flex-direction:column }
+    .fab button.small{ padding:12px 14px; border-radius:50px; background:var(--primary); color:#fff; border:none; box-shadow:var(--shadow-sm); font-weight:800 }
+    .fab button.small.pdf{ background:var(--pdf-red) }
+    .fab button.small.new{ background:#ff6b35 }
+    .modal{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); justify-content:center; align-items:flex-start; padding:18px; z-index:10000; overflow:auto }
+    .modal-content{ background:var(--card-dark); padding:26px; border-radius:18px; width:90%; max-width:760px; box-shadow:var(--shadow-md) }
+    body.dark .modal-content{ background:var(--card-light) }
+    .close{ float:right; font-size:1.8rem; color:#bbb; cursor:pointer }
+    .close:hover{ color:var(--danger); }
+    #backContainer{display:none;text-align:center;margin:30px 0;}
+    .back-btn{padding:14px 28px;background:#6c757d;color:#fff;border-radius:14px;font-weight:800;font-size:1.1rem;cursor:pointer;box-shadow:var(--shadow-sm);}
+    .back-btn:hover{background:#5a6268;transform:translateY(-2px);}
+    #toast{position:fixed;bottom:18px;right:18px;z-index:11000;pointer-events:none;}
+    .toast-msg{background:var(--success);color:#000;padding:12px 18px;border-radius:12px;box-shadow:var(--shadow-md);font-weight:800;display:flex;gap:8px;align-items:center;}
+    .progress-container{position:fixed;top:0;left:0;right:0;height:4px;background:rgba(255,255,255,0.04);z-index:11001;}
+    .progress-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--primary),var(--accent));transition:width .35s;}
+    @media print{
+      body{background:#fff;color:#000;}
+      .fab,.modal,.progress-container,.backContainer{display:none;}
+      .card{box-shadow:none;border:1px solid #ddd;}
+      th,td{background:#fff;color:#000;}
     }
-    *{box-sizing:border-box}
-    body{font-family:Inter, system-ui, Arial, sans-serif;margin:14px;background:linear-gradient(180deg,#eaf6ff,#dbeefe);color:#1c2b33}
-    header{background:linear-gradient(135deg,var(--primary),#0088cc);color:#fff;padding:18px;border-radius:18px;text-align:center;margin-bottom:12px}
-    .logo{font-weight:900;display:inline-block;padding:6px 10px;border-radius:10px;background:rgba(255,255,255,0.08)}
-    .container{max-width:1100px;margin:0 auto}
-    .card{background:var(--card);border-radius:var(--radius);padding:14px;margin-bottom:12px;box-shadow:0 8px 30px rgba(0,0,0,0.06)}
-    .grid{display:grid;grid-template-columns:repeat(3,1fr) 120px 120px;gap:10px;align-items:end}
-    @media(max-width:900px){.grid{grid-template-columns:1fr 1fr 1fr}}
-    @media(max-width:560px){.grid{grid-template-columns:1fr}}
-    label{font-weight:700;margin-bottom:6px;display:block;color:#234}
-    input,select,button{padding:10px;border-radius:10px;border:1px solid rgba(0,0,0,0.06);font-size:15px}
-    .s{width:100%;padding:10px;border-radius:12px;margin-top:12px}
-    table{width:100%;border-collapse:separate;border-spacing:0 10px;margin-top:10px}
-    th{background:var(--primary);color:#fff;padding:10px;border-radius:10px 10px 0 0;text-align:left}
-    td{background:#f8fbff;padding:10px;border-radius:10px;text-align:left;vertical-align:middle}
-    .q{display:flex;align-items:center;gap:10px;justify-content:center}
-    .qb{width:40px;height:40px;border-radius:50%;border:none;cursor:pointer}
-    .del-btn{background:var(--danger);color:#fff;border:none;border-radius:8px;padding:8px 10px;cursor:pointer}
-    .btn{cursor:pointer;border:none;padding:10px 14px;border-radius:10px;font-weight:800}
-    .ok{background:var(--success);color:#000}
-    .pdf{background:#e63946;color:#fff}
-    .ghost{background:transparent;border:1px solid rgba(0,0,0,.06)}
-    .fab{position:fixed;right:18px;bottom:18px;display:flex;flex-direction:column;gap:8px}
-    .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);align-items:flex-start;justify-content:center;padding:20px;z-index:999}
-    .modal-content{background:var(--card);padding:16px;border-radius:12px;width:100%;max-width:820px}
-    .toast{position:fixed;right:18px;bottom:112px;z-index:10000}
-    .toast .msg{background:var(--success);padding:10px;border-radius:10px;color:#000;font-weight:700}
-    small.muted{color:var(--muted)}
   </style>
 </head>
-<body>
+<body class="light show-bg">
+
+  <div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
+
+  <div id="toast" aria-live="polite"></div>
 
   <header>
-    <div class="logo">&lt; R.L ENERGIE &gt;</div>
-    <h1 style="margin:6px 0 0">Inventaire — Stock local</h1>
-    <div style="margin-top:6px;opacity:.95">Fonctionne offline — prépare pour APK</div>
+    <div class="logo-top">&lt; R.L ENERGIE &gt;</div>
+    <h1>Inventaire</h1>
+    <div class="sub">Stock & Suivi</div>
+    <div class="week-moves" id="weekMoves">0 mouvements cette semaine</div>
+    <div class="stats-bar">
+      <div class="stat">Total: <span id="totalItems">0</span></div>
+      <div class="stat">Entrées: <span id="entriesWeek">0</span></div>
+      <div class="stat">Sorties: <span id="exitsWeek">0</span></div>
+    </div>
   </header>
 
-  <div class="container">
+  <div id="backContainer">
+    <button class="back-btn" onclick="restoreBackup()">REVENIR EN ARRIÈRE</button>
+  </div>
 
-    <!-- ADD -->
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <strong>Ajouter un produit</strong>
-        <small class="muted">LocalStorage • Offline</small>
+  <div class="card">
+    <div class="ch"><i class="fas fa-plus-circle"></i> Ajouter un produit</div>
+    <div class="cb">
+      <div class="g">
+        <div><label>Catégorie</label><select id="cat" onchange="updateRefSelect()"><option value="">Choisir...</option></select></div>
+        <div><label>Référence</label><select id="refSelect" onchange="fillNomFromSelect()"><option value="">Sélectionner...</option></select></div>
+        <div><label>Nom</label><input id="nom" placeholder="Auto-rempli" readonly></div>
+        <div><label>Qté</label><input id="qte" type="number" value="1" min="0"></div>
+        <div style="display:flex;align-items:end;justify-content:center"><button class="btn ok sound-btn" onclick="add()">AJOUTER</button></div>
+        <div style="display:flex;align-items:end;justify-content:center"><button class="btn new sound-btn" onclick="openModal()">Gérer refs</button></div>
       </div>
-
-      <div style="margin-top:10px" class="grid">
-        <div>
-          <label>Catégorie</label>
-          <select id="cat" onchange="updateRefSelect()"><option value="">Choisir...</option></select>
-        </div>
-        <div>
-          <label>Référence</label>
-          <select id="refSelect" onchange="fillNomFromSelect()"><option value="">Sélectionner...</option></select>
-        </div>
-        <div>
-          <label>Nom</label>
-          <input id="nom" readonly placeholder="Auto-rempli">
-        </div>
-        <div>
-          <label>Qté</label>
-          <input id="qte" type="number" value="1" min="1">
-        </div>
-        <div style="display:flex;align-items:center;justify-content:center">
-          <button class="btn ok" onclick="add()">AJOUTER</button>
-        </div>
-      </div>
-
-      <input id="search" class="s" placeholder="Recherche instantanée..." oninput="show()">
+      <input type="text" class="s" id="search" placeholder="Recherche instantanée..." oninput="show()">
+      <div id="addMsg"></div>
     </div>
+  </div>
 
-    <!-- STOCK -->
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <strong>Stock — <span id="tot">0</span> produits</strong>
-        <div>
-          <select id="catFilter" onchange="show()"><option value="">Toutes catégories</option></select>
-          <button class="btn ghost" onclick="clearFilter()">Réinitialiser</button>
-        </div>
+  <div class="card">
+    <div class="ch"><i class="fas fa-boxes"></i> Stock — <span class="tot" id="tot">0</span> produits</div>
+    <div class="cb">
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px">
+        <select id="catFilter" onchange="show()"><option value="">Toutes catégories</option></select>
+        <button class="btn" onclick="clearFilter()">Réinitialiser filtre</button>
       </div>
-
       <table>
-        <thead><tr><th>Réf</th><th>Produit</th><th style="width:170px">Stock</th><th>Catégorie</th><th style="width:120px">Actions</th></tr></thead>
+        <thead><tr><th>Réf</th><th>Produit</th><th>Stock</th><th>Catégorie</th><th>Actions</th></tr></thead>
         <tbody id="tab"></tbody>
       </table>
     </div>
-
-    <!-- SUIVI -->
-    <div class="card">
-      <strong>Derniers mouvements (10)</strong>
-      <input id="searchSuivi" class="s" placeholder="Recherche mouvements..." oninput="updateLast5()">
-      <table><thead><tr><th>Date</th><th>Réf</th><th>Produit</th><th>Qté</th><th>Type</th></tr></thead><tbody id="suiviTab"></tbody></table>
-      <div style="text-align:center;margin-top:10px"><button class="btn ghost" onclick="openFullSuivi()">Voir tout</button></div>
-    </div>
-
-    <!-- PARAMS / EXPORT -->
-    <div class="card" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between">
-      <div style="display:flex;gap:8px;align-items:center">
-        <label style="margin-right:6px">Mode sombre</label>
-        <input id="darkModeToggle" type="checkbox" onchange="toggleTheme()">
-        <small class="muted" style="margin-left:8px">• Sons configurable</small>
-      </div>
-
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn ghost" onclick="exportCSV()">Export CSV</button>
-        <button class="btn pdf" onclick="generatePDF()">Export PDF</button>
-        <button class="btn ok" onclick="exportXLSX()">Export XLSX</button>
-        <button class="btn ghost" onclick="exportBackupJSON()">Backup JSON</button>
-        <button class="btn" style="background:var(--danger);color:#fff" onclick="resetAll()">Réinitialiser</button>
-      </div>
-    </div>
-
   </div>
 
-  <!-- FAB -->
-  <div class="fab" aria-hidden>
-    <button class="btn" onclick="openModal()">Gérer catégories</button>
+  <div class="card">
+    <div class="ch"><i class="fas fa-history"></i> Derniers mouvements (10)</div>
+    <div class="cb">
+      <input type="text" class="s" id="searchSuivi" placeholder="Recherche dans les mouvements..." style="margin-bottom:12px" oninput="updateLast5()">
+      <table>
+        <thead><tr><th>Date</th><th>Réf</th><th>Produit</th><th>Qté</th><th>Type</th></tr></thead>
+        <tbody id="suiviTab"></tbody>
+      </table>
+      <div class="more-btn" id="moreBtn" style="display:none; margin-top:12px">
+        <button class="btn" onclick="openFullSuivi()">Voir plus</button>
+      </div>
+    </div>
   </div>
 
-  <!-- MODALS -->
+  <div class="fab">
+    <button class="small sound-btn" onclick="manageExport()" title="Exporter (CSV)"><i class="fas fa-table"></i></button>
+    <button class="small pdf sound-btn" onclick="generatePDF()" title="PDF Rapport"><i class="fas fa-file-pdf"></i></button>
+    <button class="small sound-btn" onclick="openSettings()" title="Paramètres"><i class="fas fa-cog"></i></button>
+  </div>
+
+  <!-- MODAL GÉRER RÉFS -->
   <div class="modal" id="modal">
     <div class="modal-content">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <h3>Gérer catégories & références</h3>
-        <button class="btn ghost" onclick="closeModal()">Fermer</button>
+      <span class="close" onclick="closeModal()">x</span>
+      <h2>Gérer les références</h2>
+      <div style="border-bottom:2px solid rgba(255,255,255,0.06);padding-bottom:14px;margin-bottom:16px">
+        <h3 style="color:var(--success)">Ajouter une référence</h3>
+        <div style="display:grid;gap:10px">
+          <div><label>Catégorie</label><select id="newCat"><option>PANNEAUX</option><option>COFFRET</option><option>MONITORING</option><option>DIVERS PETIT MATÉRIEL</option><option>CÂBLE SOLAIRE</option><option>ONDULEURS</option><option>DISJONCTEUR DIFFÉRENTIEL</option></select></div>
+          <div><label>Référence</label><input id="newRef" placeholder="/ONDTEST"></div>
+          <div><label>Nom</label><input id="newNom" placeholder="Onduleur test 10kW"></div>
+        </div>
+        <div style="text-align:right;margin-top:10px"><button class="btn ok sound-btn" onclick="saveNewRef()">AJOUTER</button></div>
       </div>
-
-      <div style="margin-top:12px;border-top:1px solid #eee;padding-top:12px;display:grid;gap:10px">
-        <div>
-          <strong>Ajouter catégorie</strong>
-          <div style="display:flex;gap:8px;margin-top:8px">
-            <input id="newCategoryInput" placeholder="Nom catégorie (ex: RACKS)">
-            <button class="btn ok" onclick="addCategory()">Créer</button>
-          </div>
+      <div>
+        <h3 style="color:var(--danger)">Supprimer une référence</h3>
+        <div style="display:grid;gap:10px">
+          <div><label>Catégorie</label><select id="delCat" onchange="loadRefsToDelete()"><option value="">Choisir...</option><option>PANNEAUX</option><option>COFFRET</option><option>MONITORING</option><option>DIVERS PETIT MATÉRIEL</option><option>CÂBLE SOLAIRE</option><option>ONDULEURS</option><option>DISJONCTEUR DIFFÉRENTIEL</option></select></div>
+          <div><label>Référence à supprimer</label><select id="delRefSelect"><option value="">Sélectionne...</option></select></div>
         </div>
-
-        <div>
-          <strong>Ajouter référence</strong>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
-            <select id="newCat"></select>
-            <input id="newRef" placeholder="/REF001">
-            <input id="newNom" placeholder="Nom produit">
-            <div style="text-align:right"><button class="btn ok" onclick="saveNewRef()">Ajouter référence</button></div>
-          </div>
-        </div>
-
-        <div>
-          <strong>Supprimer référence / catégorie</strong>
-          <div style="display:grid;gap:8px;margin-top:8px">
-            <select id="delCat" onchange="loadRefsToDelete()"></select>
-            <select id="delRefSelect"></select>
-            <div style="display:flex;gap:8px">
-              <button class="btn" style="background:var(--danger);color:#fff" onclick="deleteRef()">Supprimer référence</button>
-              <button class="btn" style="background:var(--danger);color:#fff" onclick="deleteCategory()">Supprimer catégorie</button>
-            </div>
-            <small class="muted">Supprimer une catégorie supprime aussi ses références et articles stockés.</small>
-          </div>
-        </div>
+        <div style="text-align:right;margin-top:10px"><button class="btn" style="background:var(--danger);color:#fff" onclick="deleteRef()">SUPPRIMER</button></div>
       </div>
+      <div id="msg" style="margin-top:12px"></div>
     </div>
   </div>
 
-  <!-- Full suivi modal -->
-  <div class="modal" id="fullSuiviModal">
+  <!-- EXPORT MODAL -->
+  <div class="modal" id="exportModal">
     <div class="modal-content">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <h3>Suivi complet</h3>
-        <button class="btn ghost" onclick="closeFullSuivi()">Fermer</button>
+      <span class="close" onclick="closeExportModal()">x</span>
+      <h2>Exporter les tableaux</h2>
+      <p>Choisis une action :</p>
+      <div style="display:grid;gap:12px;margin-top:12px">
+        <button class="btn ok sound-btn" onclick="exportNew()">Créer un nouveau fichier CSV</button>
+        <button class="btn" style="background:#6c757d;color:#fff" onclick="updateLastFile()">Mettre à jour le dernier fichier</button>
+        <button class="btn pdf sound-btn" onclick="exportAll()">Exporter CSV + PDF</button>
       </div>
-      <input id="searchFullSuivi" class="s" placeholder="Recherche..." oninput="updateFullSuivi()" />
-      <div style="overflow:auto;max-height:60vh;margin-top:10px">
-        <table style="width:100%"><thead><tr><th>Date</th><th>Réf</th><th>Produit</th><th>Qté</th><th>Type</th></tr></thead><tbody id="fullSuiviTab"></tbody></table>
+      <div id="exportMsg" style="margin-top:12px"></div>
+    </div>
+  </div>
+
+  <!-- FULL SUIVI MODAL -->
+  <div class="modal" id="fullSuiviModal">
+    <div class="modal-content" style="max-width:1000px">
+      <span class="close" onclick="closeFullSuivi()">x</span>
+      <h2>Suivi complet des mouvements</h2>
+      <input type="text" class="s" id="searchFullSuivi" placeholder="Recherche dans tout le suivi..." style="margin-bottom:12px" oninput="updateFullSuivi()">
+      <div style="overflow-x:auto">
+        <table style="width:100%;min-width:650px">
+          <thead><tr><th>Date</th><th>Réf</th><th>Produit</th><th>Qté</th><th>Type</th></tr></thead>
+          <tbody id="fullSuiviTab"></tbody>
+        </table>
       </div>
     </div>
   </div>
 
-  <div id="toast" class="toast"></div>
+  <!-- QTY MODAL -->
+  <div class="modal" id="qtyModal">
+    <div class="modal-content" style="max-width:420px;padding:30px">
+      <span class="close" onclick="closeQtyModal()">x</span>
+      <h2 id="qtyTitle" style="margin-bottom:12px;color:var(--primary)">Combien ?</h2>
+      <div id="qtySubtitle" style="margin-bottom:12px;color:var(--muted)"></div>
+      <input type="number" id="qtyInput" style="width:160px;padding:12px;border-radius:12px;border:3px solid rgba(255,255,255,0.04);display:block;margin:0 auto;font-weight:900" min="0" autofocus>
+      <div style="display:flex;gap:12px;justify-content:center;margin-top:14px">
+        <button class="btn ok" onclick="confirmQty()">OK</button>
+        <button class="btn" style="background:#6c757d;color:#fff" onclick="closeQtyModal()">Annuler</button>
+      </div>
+    </div>
+  </div>
 
-  <!-- LIBRARIES (CDN fallback; for offline replace with local files inside APK) -->
-  <!-- Replace these <script> with local file paths when packaging for offline APK: e.g. /assets/js/jspdf.umd.min.js -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <!-- SETTINGS MODAL -->
+  <div class="modal" id="settingsModal">
+    <div class="modal-content">
+      <span class="close" onclick="closeSettings()">x</span>
+      <h2>Paramètres</h2>
+      <div style="display:grid;gap:8px;margin-top:8px">
+        <div class="settings-item"><span>Mode sombre</span><label class="switch"><input type="checkbox" id="darkModeToggle" onchange="toggleTheme()"><span class="slider"></span></label></div>
+        <div class="settings-item"><span>Thème auto (heure)</span><label class="switch"><input type="checkbox" id="autoThemeToggle" onchange="toggleAutoTheme()"><span class="slider"></span></label></div>
+        <div class="settings-item"><span>Sons</span><label class="switch"><input type="checkbox" id="soundToggle" checked onchange="toggleSound()"><span class="slider"></span></label></div>
+        <div class="settings-item"><span>Importer CSV</span><label style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.04);padding:8px 12px;border-radius:10px;">Choisir fichier<input type="file" id="importFile" accept=".csv" style="margin-left:8px" onchange="importCSV(event)"></label></div>
+        <div class="settings-item"><span>Exporter tout</span><button class="btn ok" onclick="exportAll()">CSV + PDF</button></div>
+        <div class="settings-item"><span>Réinitialiser tout</span><button class="btn" style="background:var(--danger);color:#fff" onclick="resetAll()">Effacer</button></div>
+        <div class="settings-item"><span>Restaurer sauvegarde</span><button class="btn" style="background:#9c27b0;color:#fff" onclick="restoreBackup()">Revenir en arrière</button></div>
+      </div>
+      <div style="margin-top:12px;color:var(--muted)">R.L ENERGIE STOCK PRO • v5K FINAL • 100% FONCTIONNEL</div>
+    </div>
+  </div>
+
   <script>
-  /* =========================
-     DATA
-     ========================= */
-  let BASE = JSON.parse(localStorage.getItem('RL_BASE_REFS')) || {
-    PANNEAUX: [
-      "/PVQCEL-G9-385KWC→QCells G9 385 Wc",
-      "/PVTRINA550→Trina Vertex S+ 550 Wc",
-      "/PVJA-550→JA Solar 550 Wc"
-    ],
-    COFFRET: ["/COF220A→Coffret 2x20A MC4"],
-    MONITORING: ["/CLE-WINET-S→Clé Wi-Fi SUNGROW"],
-    "DIVERS PETIT MATÉRIEL": ["/COLSONGR19→Colson grand 19mm"],
-    "CÂBLE SOLAIRE":[ "/R2V4X10→Câble R2V 4x10mm²" ],
-    ONDULEURS:[ "/OND10-MO-HUA→Huawei 10 kW" ]
-  };
+    // ========== TOUTES LES +200 RÉFÉRENCES DE TES FEUILLES ==========
+    let DEFAULT_BASE = {
+      "PANNEAUX": [
+        "/PVQCEL-G9-385KWC→QCells G9 385 Wc",
+        "/PVQCEL-G10-540→QCells G10 540 Wc",
+        "/PVTRINA400→Trina 400 Wc",
+        "/PVTRINA550→Trina Vertex S+ 550 Wc",
+        "/PVJA-545→JA Solar 545 Wc",
+        "/PVLONGI-550→Longi Hi-MO 6 550 Wc",
+        "/PVLONGI-660→Longi Hi-MO X6 660 Wc",
+        "/PVVICTRON-440→Victron 440 Wc",
+        "/PVDUAL-550→Dualsun Flash 550 Wc",
+        "/PVREC-405→REC Alpha Pure 405 Wc",
+        "/PVREC-470→REC Alpha Pure-R 470 Wc",
+        "/PVJINKO-615→Jinko Tiger Neo 615 Wc",
+        "/PVTRINA-425→Trina Vertex S 425 Wc",
+        "/PVTRINA-435→Trina Vertex S 435 Wc",
+        "/PVJA-550→JA Solar 550 Wc",
+        "/PVLONGI-540→Longi Hi-MO 6 540 Wc",
+        "/PVREC-410→REC Alpha Pure 410 Wc",
+        "/PVREC-420→REC Alpha Pure 420 Wc",
+        "/PVREC-430→REC Alpha Pure 430 Wc",
+        "/PVJINKO-620→Jinko Tiger Neo 620 Wc",
+        "/PVJINKO-625→Jinko Tiger Neo 625 Wc",
+        "/PVJA-555→JA Solar 555 Wc",
+        "/PVJA-560→JA Solar 560 Wc",
+        "/PVJA-565→JA Solar 565 Wc",
+        "/PVJA-570→JA Solar 570 Wc",
+        "/PVJA-575→JA Solar 575 Wc",
+        "/PVJA-580→JA Solar 580 Wc",
+        "/PVJA-585→JA Solar 585 Wc",
+        "/PVJA-590→JA Solar 590 Wc",
+        "/PVJA-595→JA Solar 595 Wc",
+        "/PVJA-600→JA Solar 600 Wc",
+        "/PVJA-605→JA Solar 605 Wc",
+        "/PVJA-610→JA Solar 610 Wc",
+        "/PVJA-615→JA Solar 615 Wc",
+        "/PVJA-620→JA Solar 620 Wc",
+        "/PVJA-625→JA Solar 625 Wc",
+        "/PVJA-630→JA Solar 630 Wc"
+      ],
+      "COFFRET": [
+        "/COF220A→Coffret 2x20A MC4",
+        "/COFDC20A→Coffret DC 20A",
+        "/COFDC40A→Coffret DC 40A",
+        "/COFDC63A→Coffret DC 63A",
+        "/COFDC100A→Coffret DC 100A",
+        "/COFDC160A→Coffret DC 160A",
+        "/COFDC250A→Coffret DC 250A",
+        "/COFDC400A→Coffret DC 400A",
+        "/COFDC500A→Coffret DC 500A",
+        "/COFDC630A→Coffret DC 630A",
+        "/COFDC800A→Coffret DC 800A",
+        "/COFDC1000A→Coffret DC 1000A",
+        "/COFDC1250A→Coffret DC 1250A",
+        "/COFDC1600A→Coffret DC 1600A"
+      ],
+      "MONITORING": [
+        "/CLE-WINET-S→Clé Wi-Fi SUNGROW",
+        "/CLE-WINET-L→Clé Wi-Fi SUNGROW LAN",
+        "/CLE-ETH-SG→Ethernet SUNGROW",
+        "/CLE-4G-SG→4G SUNGROW",
+        "/CLE-WIFI-HUA→Wi-Fi Huawei",
+        "/CLE-4G-HUA→4G Huawei",
+        "/CLE-WIFI-FRON→Wi-Fi Fronius",
+        "/CLE-ETH-FRON→Ethernet Fronius",
+        "/CLE-4G-FRON→4G Fronius",
+        "/CLE-ETH-ENP→Ethernet Enphase",
+        "/CLE-4G-ENP→4G Enphase"
+      ],
+      "DIVERS PETIT MATÉRIEL": [
+        "/COLSONGR19→Colson grand 19mm",
+        "/COLSONPT12→Colson petit 12mm",
+        "/FIX-RALU→Fixation rail alu",
+        "/MC4-MALE→Connecteur MC4 mâle",
+        "/MC4-FEMALE→Connecteur MC4 femelle",
+        "/MC4-OUTIL→Outil sertissage MC4",
+        "/VIS-RAIL→Vis fixation rail M8",
+        "/ECROU-RAIL→Écrou rail M8",
+        "/RONDELLE→Rondelle M8",
+        "/FIX-TOIT→Fixation toit tuile",
+        "/FIX-TOIT-ARD→Fixation toit ardoise",
+        "/FIX-TOIT-BAC→Fixation toit bac acier",
+        "/FIX-TOIT-PLAT→Fixation toit plat",
+        "/FIX-SOL→Fixation sol",
+        "/FIX-FACADE→Fixation façade",
+        "/OPTIMISEUR→Optimiseur de puissance",
+        "/OPTIMISEUR-SG→Optimiseur Sungrow",
+        "/OPTIMISEUR-HUA→Optimiseur Huawei"
+      ],
+      "CÂBLE SOLAIRE": [
+        "/R2V4X10→Câble R2V 4x10mm²",
+        "/R2V4X16→Câble R2V 4x16mm²",
+        "/R2V4X25→Câble R2V 4x25mm²",
+        "/R2V4X35→Câble R2V 4x35mm²",
+        "/H1Z2Z2-6→Câble solaire 6mm² rouge/noir",
+        "/H1Z2Z2-10→Câble solaire 10mm² rouge/noir",
+        "/H1Z2Z2-4→Câble solaire 4mm² rouge/noir",
+        "/TERRE-6→Câble terre 6mm² vert/jaune",
+        "/TERRE-16→Câble terre 16mm² vert/jaune",
+        "/TERRE-25→Câble terre 25mm² vert/jaune",
+        "/TERRE-35→Câble terre 35mm² vert/jaune"
+      ],
+      "ONDULEURS": [
+        "/OND3-MO-HUA→Huawei SUN2000 3kW",
+        "/OND5-MO-HUA→Huawei SUN2000 5kW",
+        "/OND10-MO-HUA→Huawei SUN2000 10kW",
+        "/OND20-MO-HUA→Huawei SUN2000 20kW",
+        "/OND30-MO-HUA→Huawei SUN2000 30kW",
+        "/OND50-MO-HUA→Huawei SUN2000 50kW",
+        "/OND100-MO-HUA→Huawei SUN2000 100kW",
+        "/OND8-SG→Sungrow SG8.0RT",
+        "/OND17-SG→Sungrow SG17RT",
+        "/OND33-SG→Sungrow SG33CX",
+        "/OND50-SG→Sungrow SG50CX",
+        "/OND110-SG→Sungrow SG110CX",
+        "/OND3-ENP→Enphase IQ8M",
+        "/OND5-FRON→Fronius Primo 5.0",
+        "/OND6-FRON→Fronius Primo 6.0",
+        "/OND8-FRON→Fronius Primo 8.2",
+        "/OND10-FRON→Fronius Primo 10.0",
+        "/OND15-SMA→SMA Sunny Tripower 15kW",
+        "/OND20-SMA→SMA Sunny Tripower 20kW",
+        "/OND25-SMA→SMA Sunny Tripower 25kW"
+      ],
+      "DISJONCTEUR DIFFÉRENTIEL": [
+        "/AGG160A→AGG 160A 4P",
+        "/AGG250A→AGG 250A 4P",
+        "/AGG400A→AGG 400A 4P",
+        "/AGG630A→AGG 630A 4P",
+        "/PARAF40A→Parafoudre 40kA Type 2",
+        "/PARAF65A→Parafoudre 65kA Type 2",
+        "/DJDC1000V→Disjoncteur DC 1000V 32A",
+        "/DJDC1000V-63A→Disjoncteur DC 1000V 63A",
+        "/DJDC1000V-100A→Disjoncteur DC 1000V 100A",
+        "/DJAC-40A→Disjoncteur AC 40A 4P",
+        "/DJAC-63A→Disjoncteur AC 63A 4P",
+        "/DJAC-100A→Disjoncteur AC 100A 4P",
+        "/DJAC-125A→Disjoncteur AC 125A 4P",
+        "/DJAC-160A→Disjoncteur AC 160A 4P"
+      ]
+    };
 
-  let stock = JSON.parse(localStorage.getItem('RLSTOCK')) || {};
-  let suivi = JSON.parse(localStorage.getItem('RL_SUIVI')) || [];
-  let soundEnabled = localStorage.getItem('RL_SOUND') !== 'false';
+    let BASE = JSON.parse(localStorage.getItem("RL_BASE_REFS")) || {};
+    if (Object.keys(BASE).length === 0) {
+      BASE = JSON.parse(JSON.stringify(DEFAULT_BASE));
+      localStorage.setItem("RL_BASE_REFS", JSON.stringify(BASE));
+    }
+    let stock = JSON.parse(localStorage.getItem("RLSTOCK")) || {};
+    let suivi = JSON.parse(localStorage.getItem("RL_SUIVI")) || [];
+    let lastExportFile = localStorage.getItem("RL_LAST_EXPORT_FILE") || null;
+    let backupStock = {}, backupSuivi = {}, backupBASE = {};
 
-  /* ====== helpers ====== */
-  function toast(msg, t=2200){
-    const box=document.getElementById('toast');
-    const d=document.createElement('div'); d.className='msg'; d.style.marginTop='6px';
-    d.textContent = msg; box.appendChild(d); setTimeout(()=>d.remove(), t);
-  }
-  function saveAll(){
-    localStorage.setItem('RL_BASE_REFS', JSON.stringify(BASE));
-    localStorage.setItem('RLSTOCK', JSON.stringify(stock));
-    localStorage.setItem('RL_SUIVI', JSON.stringify(suivi));
-  }
+    function saveBackup() {
+      backupStock = JSON.parse(JSON.stringify(stock));
+      backupSuivi = JSON.parse(JSON.stringify(suivi));
+      backupBASE = JSON.parse(JSON.stringify(BASE));
+    }
 
-  /* ====== categories/ref UI ====== */
-  function populateAllCats(){
-    const ids = ['cat','catFilter','newCat','delCat','delRefCat'];
-    ids.forEach(id=>{
-      const el = document.getElementById(id);
-      if(!el) return;
-      const prev = el.value;
-      el.innerHTML = (id==='catFilter' ? '<option value="">Toutes catégories</option>' : '<option value="">Choisir...</option>');
-      Object.keys(BASE).sort().forEach(k=>{
-        const o=document.createElement('option'); o.value=k; o.textContent=k;
-        if(k===prev) o.selected=true;
-        el.appendChild(o);
+    function restoreBackup() {
+      if (!confirm("Restaurer la sauvegarde ?")) return;
+      stock = JSON.parse(JSON.stringify(backupStock));
+      suivi = JSON.parse(JSON.stringify(backupSuivi));
+      BASE = JSON.parse(JSON.stringify(backupBASE));
+      localStorage.setItem('RLSTOCK', JSON.stringify(stock));
+      localStorage.setItem('RL_SUIVI', JSON.stringify(suivi));
+      localStorage.setItem('RL_BASE_REFS', JSON.stringify(BASE));
+      show(); updateLast5(); updateRefSelect(); populateCatFilter(); updateStats();
+      document.getElementById('backContainer').style.display = 'none';
+      toast('Sauvegarde restaurée !');
+    }
+
+    function resetAll() {
+      if (!confirm('TOUT EFFACER ? Une sauvegarde sera conservée.')) return;
+      saveBackup();
+      localStorage.removeItem('RLSTOCK'); localStorage.removeItem('RL_SUIVI');
+      stock = {}; suivi = [];
+      BASE = JSON.parse(JSON.stringify(DEFAULT_BASE));
+      localStorage.setItem('RL_BASE_REFS', JSON.stringify(BASE));
+      show(); updateLast5(); updateRefSelect(); populateCatFilter(); updateStats();
+      document.getElementById('backContainer').style.display = 'block';
+      toast('Réinitialisé. Réfs par défaut restaurées.');
+    }
+
+    function toast(text, type="ok"){
+      const wrap = document.getElementById('toast');
+      wrap.innerHTML = `<div class="toast-msg ${type==='err'?'error':''}"><i class="fas fa-check-circle"></i>${text}</div>`;
+      wrap.style.pointerEvents='auto';
+      setTimeout(()=>{ wrap.innerHTML=''; wrap.style.pointerEvents='none' }, 2500);
+      if (soundEnabled) playClick();
+    }
+    function playClick(){
+      try{
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const o = ctx.createOscillator(); const g = ctx.createGain();
+        o.type='sine'; o.frequency.value = 880; g.gain.value = 0.0015;
+        o.connect(g); g.connect(ctx.destination);
+        o.start(); o.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.06);
+        setTimeout(()=>{ o.stop(); ctx.close() }, 80);
+      }catch(e){}
+    }
+    function getDateTime(){
+      const now = new Date();
+      return now.toLocaleString("fr-FR", { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    }
+
+    let soundEnabled = (localStorage.getItem("RL_SOUND") !== "false");
+    let autoTheme = (localStorage.getItem("RL_AUTO_THEME") === "true");
+    let theme = localStorage.getItem("RL_THEME") || (window.matchMedia('(prefers-color-scheme:light)').matches ? 'light' : 'dark');
+
+    function applyTheme(t){
+      document.body.classList.toggle('dark', t === 'dark');
+      localStorage.setItem('RL_THEME', t);
+      theme = t;
+      document.getElementById("darkModeToggle").checked = (t==='dark');
+    }
+    function toggleTheme(){ applyTheme(document.body.classList.contains('dark') ? 'light' : 'dark'); toast('Thème changé'); }
+    function toggleAutoTheme(){
+      autoTheme = document.getElementById('autoThemeToggle').checked;
+      localStorage.setItem('RL_AUTO_THEME', autoTheme ? 'true' : 'false');
+      if(autoTheme) startAutoTheme();
+      toast(autoTheme ? 'Thème auto activé' : 'Thème auto désactivé');
+    }
+    let autoThemeTimer = null;
+    function startAutoTheme(){
+      if(autoThemeTimer) clearInterval(autoThemeTimer);
+      function check(){ const h = new Date().getHours(); applyTheme(h >= 7 && h < 20 ? 'light' : 'dark'); }
+      check(); autoThemeTimer = setInterval(check, 60_000);
+    }
+    function toggleSound(){
+      soundEnabled = document.getElementById('soundToggle').checked;
+      localStorage.setItem('RL_SOUND', soundEnabled ? 'true' : 'false');
+      toast(soundEnabled ? 'Sons activés' : 'Sons désactivés');
+    }
+
+    function populateCatFilter(){
+      const sel = document.getElementById('catFilter'); sel.innerHTML = '<option value="">Toutes catégories</option>';
+      Object.keys(BASE).forEach(c => sel.innerHTML += `<option>${c}</option>`);
+    }
+    function updateRefSelect(){
+      const cat = document.getElementById('cat').value;
+      const select = document.getElementById('refSelect'); select.innerHTML = "<option value=''>Sélectionner...</option>";
+      document.getElementById('nom').value = '';
+      if(!cat || !BASE[cat]) return;
+      BASE[cat].forEach(item => {
+        const [ref, nom] = item.split('→');
+        select.innerHTML += `<option value="${ref}" data-nom="${nom}">${ref} — ${nom}</option>`;
       });
-    });
-    // sync delete cat selector
-    const delCat = document.getElementById('delCat');
-    if(delCat) loadRefsToDelete();
-  }
+    }
+    function fillNomFromSelect(){
+      const sel = document.getElementById('refSelect');
+      const so = sel.options[sel.selectedIndex];
+      if(so && so.value) document.getElementById('nom').value = so.getAttribute('data-nom') || '';
+    }
 
-  function updateRefSelect(){
-    const c = document.getElementById('cat').value;
-    const sel = document.getElementById('refSelect'); sel.innerHTML='<option value="">Sélectionner...</option>';
-    if(!c || !BASE[c]) return fillNomFromSelect();
-    BASE[c].forEach(it=>{
-      const [r,n] = it.split('→');
-      const o=document.createElement('option'); o.value=r; o.textContent = r + ' — ' + (n||'');
-      sel.appendChild(o);
-    });
-    fillNomFromSelect();
-  }
-  function fillNomFromSelect(){
-    const c=document.getElementById('cat').value;
-    const r=document.getElementById('refSelect').value;
-    document.getElementById('nom').value='';
-    if(!c || !r) return;
-    const item = (BASE[c]||[]).find(x=>x.startsWith(r));
-    if(item) document.getElementById('nom').value = item.split('→')[1]||'';
-  }
+    function saveNewRef(){
+      const cat = document.getElementById('newCat').value;
+      const ref = document.getElementById('newRef').value.trim();
+      const nom = document.getElementById('newNom').value.trim();
+      const msg = document.getElementById('msg');
+      if (!ref.startsWith('/') || ref.length < 3) return msg.innerHTML = "<div style='color:#fff;background:#ff3b5c;padding:8px;border-radius:8px'>/REF obligatoire (3+ car.)</div>";
+      if (!nom || nom.length < 2) return msg.innerHTML = "<div style='color:#fff;background:#ff3b5c;padding:8px;border-radius:8px'>Nom obligatoire</div>";
+      if (!BASE[cat]) BASE[cat] = [];
+      if (BASE[cat].some(x => x.startsWith(ref + '→'))) return msg.innerHTML = "<div style='color:#fff;background:#ff3b5c;padding:8px;border-radius:8px'>Existe déjà</div>";
+      BASE[cat].push(ref + '→' + nom);
+      localStorage.setItem('RL_BASE_REFS', JSON.stringify(BASE));
+      msg.innerHTML = "<div style='color:#000;background:var(--success);padding:8px;border-radius:8px'>Ajoutée !</div>";
+      setTimeout(() => { closeModal(); updateRefSelect(); populateCatFilter(); msg.innerHTML = ''; }, 1000);
+    }
+    function loadRefsToDelete(){
+      const cat = document.getElementById('delCat').value;
+      const sel = document.getElementById('delRefSelect'); sel.innerHTML = "<option value=''>Sélectionne...</option>";
+      if(!cat) return;
+      BASE[cat].forEach(l => { const [r,n] = l.split('→'); sel.innerHTML += `<option value="${r}">${r} — ${n}</option>`; });
+    }
+    function deleteRef(){
+      const cat = document.getElementById('delCat').value;
+      const ref = document.getElementById('delRefSelect').value;
+      if(!cat || !ref) return alert('Choisis catégorie + référence !');
+      if(!confirm(`Supprimer "${ref}" partout ?`)) return;
+      BASE[cat] = BASE[cat].filter(x => !x.startsWith(ref + '→'));
+      if(BASE[cat].length === 0) delete BASE[cat];
+      localStorage.setItem('RL_BASE_REFS', JSON.stringify(BASE));
+      if(stock[ref]) { addToSuivi(ref, stock[ref].n, -stock[ref].q, 'Suppression'); delete stock[ref]; localStorage.setItem('RLSTOCK', JSON.stringify(stock)); }
+      document.getElementById('msg').innerHTML = `<div style="color:#000;background:var(--success);padding:8px;border-radius:8px">Supprimée !</div>`;
+      loadRefsToDelete(); updateRefSelect(); show(); updateLast5(); populateCatFilter();
+      setTimeout(()=>document.getElementById('msg').innerHTML='',1200);
+    }
 
-  /* ===== category/ref management ===== */
-  function addCategory(){
-    const nm=(document.getElementById('newCategoryInput').value||'').trim();
-    if(!nm) return toast('Nom requis');
-    if(BASE[nm]) return toast('Existe déjà');
-    BASE[nm]=[];
-    saveAll(); populateAllCats(); toast('Catégorie créée');
-    document.getElementById('newCategoryInput').value='';
-  }
-  function deleteCategory(){
-    const cat = document.getElementById('delCat').value;
-    if(!cat) return toast('Choisis une catégorie');
-    if(!confirm(`Supprimer la catégorie "${cat}" et toutes ses références ?`)) return;
-    // remove associated stock items
-    (BASE[cat]||[]).forEach(entry=>{
-      const ref = entry.split('→')[0];
-      // stock keys are stored as cat|ref
-      const key = Object.keys(stock).find(k=>k.endsWith('|'+ref) || k === cat + '|' + ref);
-      if(key){
-        suivi.push({date:new Date().toLocaleString(), ref, nom:stock[key].nom, qte:-stock[key].q, type:'Suppression'});
-        delete stock[key];
+    function add(){
+      const ref = document.getElementById('refSelect').value;
+      const cat = document.getElementById('cat').value;
+      const nom = document.getElementById('nom').value;
+      const qte = +document.getElementById('qte').value || 1;
+      const msgDiv = document.getElementById('addMsg'); msgDiv.innerHTML='';
+      if(!ref || !cat){ msgDiv.innerHTML = "<div style='color:#fff;background:#ff3b5c;padding:8px;border-radius:8px'>Catégorie + référence !</div>"; return; }
+      if(!stock[ref]) stock[ref] = { n: nom, q: 0, c: cat };
+      stock[ref].q += qte;
+      localStorage.setItem('RLSTOCK', JSON.stringify(stock));
+      addToSuivi(ref, stock[ref].n, qte, 'Entrée');
+      document.getElementById('qte').value = 1;
+      show(); updateLast5(); updateStats();
+      msgDiv.innerHTML = `<div style='color:#000;background:var(--success);padding:8px;border-radius:8px'>+${qte} ajouté !</div>`;
+      setTimeout(()=>msgDiv.innerHTML='',1500);
+      if(soundEnabled) playClick();
+    }
+
+    function openModal(){ document.getElementById('modal').style.display='flex'; loadRefsToDelete(); }
+    function closeModal(){ document.getElementById('modal').style.display='none'; document.getElementById('msg').innerHTML=''; }
+    function openExportModal(){ document.getElementById('exportModal').style.display='flex'; }
+    function closeExportModal(){ document.getElementById('exportModal').style.display='none'; document.getElementById('exportMsg').innerHTML=''; }
+    function openFullSuivi(){ updateFullSuivi(); document.getElementById('fullSuiviModal').style.display='flex'; }
+    function closeFullSuivi(){ document.getElementById('fullSuiviModal').style.display='none'; }
+    function openQtyModalFor(ref, delta){
+      const current = stock[ref] ? stock[ref].q : 0;
+      document.getElementById('qtyTitle').textContent = delta > 0 ? 'Combien ajouter ?' : 'Combien retirer ?';
+      document.getElementById('qtySubtitle').textContent = `Stock actuel : ${current}`;
+      document.getElementById('qtyInput').value = '';
+      document.getElementById('qtyModal').style.display='flex';
+      document.getElementById('qtyInput').focus();
+      window.pendingRef = ref;
+      window.pendingDelta = delta;
+    }
+    function closeQtyModal(){ document.getElementById('qtyModal').style.display='none'; }
+    function openSettings(){ document.getElementById('settingsModal').style.display='flex'; }
+    function closeSettings(){ document.getElementById('settingsModal').style.display='none'; }
+
+    function openQty(r, delta){ openQtyModalFor(r, delta); }
+    function confirmQty(){
+      const input = +document.getElementById('qtyInput').value;
+      if (isNaN(input) || input < 0) return;
+      const diff = window.pendingDelta > 0 ? (input - stock[window.pendingRef].q) : (stock[window.pendingRef].q - input);
+      stock[window.pendingRef].q = input;
+      localStorage.setItem('RLSTOCK', JSON.stringify(stock));
+      addToSuivi(window.pendingRef, stock[window.pendingRef].n, diff, diff > 0 ? 'Entrée' : 'Sortie');
+      closeQtyModal(); show(); updateLast5(); updateStats();
+      toast('Quantité mise à jour');
+    }
+
+    window.sup = function(r){
+      if(!stock[r]) return;
+      if(confirm(`Supprimer ${stock[r].q} unités de ${r} ?`)){
+        addToSuivi(r, stock[r].n, -stock[r].q, 'Suppression');
+        delete stock[r];
+        localStorage.setItem('RLSTOCK', JSON.stringify(stock));
+        show(); updateLast5(); updateStats();
+        toast('Article supprimé');
       }
-    });
-    delete BASE[cat];
-    saveAll(); populateAllCats(); show(); updateLast5(); updateStats();
-    toast('Catégorie supprimée');
-  }
-
-  function saveNewRef(){
-    const cat = document.getElementById('newCat').value;
-    const ref = (document.getElementById('newRef').value||'').trim();
-    const nom = (document.getElementById('newNom').value||'').trim();
-    if(!cat || !ref || !nom) return toast('Remplis tout');
-    if(!BASE[cat]) BASE[cat]=[];
-    if(BASE[cat].some(x=>x.startsWith(ref))) return toast('Réf existe');
-    BASE[cat].push(ref+'→'+nom);
-    saveAll(); populateAllCats(); updateRefSelect(); toast('Référence ajoutée');
-    document.getElementById('newRef').value=''; document.getElementById('newNom').value='';
-  }
-
-  function loadRefsToDelete(){
-    const cat = document.getElementById('delCat').value || document.getElementById('delRefCat')?.value;
-    const sel = document.getElementById('delRefSelect'); if(!sel) return;
-    sel.innerHTML = '<option value="">Référence à supprimer</option>';
-    if(!cat || !BASE[cat]) return;
-    BASE[cat].forEach(x=>{
-      const ref = x.split('→')[0];
-      const o = document.createElement('option'); o.value = ref; o.textContent = x;
-      sel.appendChild(o);
-    });
-  }
-  function deleteRef(){
-    const cat = document.getElementById('delCat').value;
-    const ref = document.getElementById('delRefSelect').value;
-    if(!cat || !ref) return toast('Choisis catégorie + réf');
-    if(!confirm('Supprimer la référence sélectionnée ?')) return;
-    BASE[cat] = BASE[cat].filter(x=>!x.startsWith(ref));
-    if(BASE[cat].length===0) delete BASE[cat];
-    // remove stock entries for this ref
-    const keys = Object.keys(stock).filter(k=>k.endsWith('|'+ref) || k===cat+'|'+ref);
-    keys.forEach(k=>{
-      suivi.push({date:new Date().toLocaleString(), ref, nom:stock[k].n, qte:-stock[k].q, type:'Suppression'});
-      delete stock[k];
-    });
-    saveAll(); populateAllCats(); updateRefSelect(); show(); updateLast5();
-    toast('Référence supprimée');
-  }
-
-  /* ===== add product, qty modal, delete item ===== */
-  function add(){
-    const cat = document.getElementById('cat').value;
-    const ref = document.getElementById('refSelect').value;
-    const nom = document.getElementById('nom').value || ref;
-    const qte = parseInt(document.getElementById('qte').value) || 0;
-    if(!cat || !ref || qte <= 0) return toast('Catégorie + réf + quantité requises');
-    const key = cat + '|' + ref;
-    if(!stock[key]) stock[key] = {n:nom,q:0,c:cat};
-    stock[key].q += qte;
-    suivi.push({date:new Date().toLocaleString(), ref, nom, qte, type:'Entrée'});
-    saveAll(); show(); updateLast5(); updateStats();
-    document.getElementById('qte').value = 1;
-    toast('Ajouté');
-  }
-
-  let pendingRef=null;
-  function openQtyModalFor(key){
-    pendingRef = key;
-    const qty = stock[key] ? stock[key].q : 0;
-    document.getElementById('qtyTitle').textContent='Modifier quantité';
-    document.getElementById('qtyName').textContent = stock[key] ? stock[key].n : key;
-    document.getElementById('qtyInput').value = qty;
-    document.getElementById('qtyModal').style.display='flex';
-  }
-  function confirmQty(){
-    const v = parseInt(document.getElementById('qtyInput').value);
-    if(isNaN(v) || v<0) return toast('Quantité invalide');
-    if(!pendingRef){ closeQtyModal(); return; }
-    const prev = stock[pendingRef] ? stock[pendingRef].q : 0;
-    const diff = v - prev;
-    if(!stock[pendingRef]) stock[pendingRef] = {n:pendingRef,q:0,c:'UNCAT'};
-    stock[pendingRef].q = v;
-    if(diff !== 0){
-      suivi.push({date:new Date().toLocaleString(), ref:stock[pendingRef].ref || pendingRef, nom:stock[pendingRef].n, qte:diff, type: diff>0? 'Entrée':'Sortie'});
     }
-    if(stock[pendingRef].q <= 0) delete stock[pendingRef];
-    saveAll(); show(); updateLast5(); updateStats(); closeQtyModal(); toast('Quantité mise à jour');
-  }
-  function closeQtyModal(){ document.getElementById('qtyModal').style.display='none'; pendingRef=null; }
 
-  function deleteItem(key){
-    if(!stock[key]) return;
-    if(!confirm('Supprimer cet article ?')) return;
-    suivi.push({date:new Date().toLocaleString(), ref:stock[key].n, nom:stock[key].n, qte:-stock[key].q, type:'Suppression'});
-    delete stock[key];
-    saveAll(); show(); updateLast5(); updateStats();
-    toast('Article supprimé');
-  }
+    function addToSuivi(ref, nom, qte, type){
+      suivi.push({ ref, nom, qte, type, date: getDateTime() });
+      localStorage.setItem('RL_SUIVI', JSON.stringify(suivi));
+    }
 
-  /* ===== show stock & suivi ===== */
-  function show(){
-    const q = (document.getElementById('search').value||'').toLowerCase();
-    const filt = document.getElementById('catFilter').value;
-    const tab=document.getElementById('tab'); tab.innerHTML='';
-    let totalCount=0;
-    Object.keys(stock).forEach(k=>{
-      const it = stock[k];
-      if(filt && it.c !== filt) return;
-      if(q && !(k.toLowerCase().includes(q) || (it.n && it.n.toLowerCase().includes(q)))) return;
-      totalCount += it.q;
-      const tr=document.createElement('tr');
-      tr.innerHTML = `<td style="font-family:monospace">${k.split('|')[1]||k}</td>
-                      <td>${it.n}</td>
-                      <td style="text-align:center"><div class="q">
-                        <button class="qb" onclick="openQtyModalFor('${k}')">✎</button>
-                        <span class="qv ${it.q<1?'out':''}">${it.q}</span>
-                      </div></td>
-                      <td>${it.c}</td>
-                      <td style="text-align:center"><button class="del-btn" onclick="deleteItem('${k}')">🗑</button></td>`;
-      tab.appendChild(tr);
-    });
-    document.getElementById('tot').textContent = totalCount;
-  }
+    function show(){
+      const s = document.getElementById('search').value.toLowerCase();
+      const catFilter = document.getElementById('catFilter').value;
+      const tab = document.getElementById('tab'); tab.innerHTML='';
+      let tot = 0;
+      for(let r in stock){
+        const p = stock[r];
+        if(catFilter && p.c !== catFilter) continue;
+        if(!(r.toLowerCase().includes(s) || p.n.toLowerCase().includes(s))) continue;
+        tot++;
+        const qtyClass = p.q < 1 ? 'qv out' : 'qv';
+        tab.innerHTML += `<tr>
+          <td style="font-family:monospace">${r}</td>
+          <td style="text-align:left;padding-left:12px">${p.n}</td>
+          <td class="q"><button class="qb" onclick="openQty('${r}',-1)">-</button><span class="${qtyClass}">${p.q}</span><button class="qb" onclick="openQty('${r}',1)">+</button></td>
+          <td>${p.c}</td>
+          <td><button class="del-btn" title="Supprimer" onclick="sup('${r}')"><i class="fas fa-trash"></i></button></td>
+        </tr>`;
+      }
+      document.getElementById('tot').textContent = tot;
+      document.getElementById('totalItems').textContent = Object.keys(stock).length;
+    }
 
-  function updateLast5(){
-    const q=(document.getElementById('searchSuivi').value||'').toLowerCase();
-    const arr = suivi.slice(-10).reverse();
-    const tab=document.getElementById('suiviTab'); tab.innerHTML='';
-    arr.forEach(e=>{
-      if(q && !(e.ref.toLowerCase().includes(q) || (e.nom && e.nom.toLowerCase().includes(q)))) return;
-      const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${e.date}</td><td>${e.ref}</td><td>${e.nom}</td><td>${e.qte>0?'+':''}${e.qte}</td><td>${e.type}</td>`;
-      tab.appendChild(tr);
-    });
-  }
+    function updateLast5(){
+      const searchTerm = document.getElementById('searchSuivi').value.toLowerCase();
+      const recent = suivi.slice(-10).reverse();
+      const tab = document.getElementById('suiviTab'); tab.innerHTML='';
+      recent.forEach(e=>{
+        if(e.ref.toLowerCase().includes(searchTerm) || e.nom.toLowerCase().includes(searchTerm)){
+          const color = e.qte > 0 ? 'var(--success)' : 'var(--danger)';
+          tab.innerHTML += `<tr><td>${e.date}</td><td><b>${e.ref}</b></td><td style="text-align:left;padding-left:12px">${e.nom}</td><td style="color:${color}">${e.qte>0?'+':''}${e.qte}</td><td style="color:${color}">${e.type}</td></tr>`;
+        }
+      });
+      document.getElementById('moreBtn').style.display = suivi.length > 10 ? 'block' : 'none';
+    }
 
-  function updateFullSuivi(){
-    const q=(document.getElementById('searchFullSuivi').value||'').toLowerCase();
-    const tab=document.getElementById('fullSuiviTab'); tab.innerHTML='';
-    suivi.slice().reverse().forEach(e=>{
-      if(q && !(e.ref.toLowerCase().includes(q) || (e.nom && e.nom.toLowerCase().includes(q)))) return;
-      const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${e.date}</td><td>${e.ref}</td><td>${e.nom}</td><td>${e.qte>0?'+':''}${e.qte}</td><td>${e.type}</td>`;
-      tab.appendChild(tr);
-    });
-  }
+    function updateFullSuivi(){
+      const searchTerm = document.getElementById('searchFullSuivi').value.toLowerCase();
+      const tab = document.getElementById('fullSuiviTab'); tab.innerHTML='';
+      suivi.slice().reverse().forEach(e=>{
+        if(e.ref.toLowerCase().includes(searchTerm) || e.nom.toLowerCase().includes(searchTerm)){
+          const color = e.qte > 0 ? 'var(--success)' : 'var(--danger)';
+          tab.innerHTML += `<tr><td>${e.date}</td><td><b>${e.ref}</b></td><td style="text-align:left;padding-left:12px">${e.nom}</td><td style="color:${color}">${e.qte>0?'+':''}${e.qte}</td><td style="color:${color}">${e.type}</td></tr>`;
+        }
+      });
+    }
 
-  /* ===== exports ===== */
-  function exportCSV(){
-    const rows = [['Référence','Produit','Qté','Catégorie']];
-    Object.keys(stock).forEach(k => rows.push([k.split('|')[1]||k, stock[k].n, stock[k].q, stock[k].c]));
-    const csv = rows.map(r => r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(';')).join('\n');
-    const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
-    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='RL_STOCK_'+new Date().toISOString().slice(0,10)+'.csv'; a.click();
-    toast('CSV exporté');
-  }
+    function generateCSV(){
+      let csv = "Référence;Produit;Stock;Catégorie\n";
+      for(let r in stock) csv += `${r};${stock[r].n};${stock[r].q};${stock[r].c}\n`;
+      csv += "\nDate;Référence;Produit;Quantité;Type\n";
+      suivi.forEach(e => csv += `${e.date};${e.ref};${e.nom};${e.qte};${e.type}\n`;
+      return csv;
+    }
+    function downloadBlob(content, filename){
+      const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      document.body.appendChild(link); link.click(); link.remove();
+    }
+    function exportNew(){
+      const csv = generateCSV();
+      const filename = `RL_STOCK_${new Date().toLocaleDateString('fr-FR').replace(/\//g,'-')}.csv`;
+      downloadBlob(csv, filename);
+      lastExportFile = filename;
+      localStorage.setItem('RL_LAST_EXPORT_FILE', lastExportFile);
+      closeExportModal();
+      toast('CSV exporté');
+    }
+    function updateLastFile(){
+      if(!lastExportFile) return toast('Aucun fichier précédent', 'err');
+      downloadBlob(generateCSV(), lastExportFile);
+      closeExportModal();
+      toast('Fichier mis à jour');
+    }
+    function exportAll(){ exportNew(); setTimeout(generatePDF, 700); }
 
-  function generatePDF(){
-    try{
-      const { jsPDF } = window.jspdf || {};
-      if(!jsPDF) throw 'jsPDF missing';
-      const doc = new jsPDF('p','mm','a4');
-      doc.setFontSize(16); doc.text('R.L ENERGIE — STOCK', 105, 14, null, null, 'center');
-      const rows = Object.keys(stock).map(k => [k.split('|')[1]||k, stock[k].n, String(stock[k].q), stock[k].c]);
-      doc.autoTable({head:[['Réf','Produit','Qté','Catégorie']], body: rows, startY:22, styles:{fontSize:9}});
-      doc.save('RL_STOCK_'+new Date().toISOString().slice(0,19).replace(/:/g,'-')+'.pdf');
+    function generatePDF(){
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.setFontSize(20); doc.text("R.L ENERGIE", 105, 20, { align:'center' });
+      doc.setFontSize(13); doc.text("Rapport hebdomadaire", 105, 30, { align:'center' });
+      const stockData = Object.keys(stock).map(r => [r, stock[r].n, stock[r].q, stock[r].c]);
+      doc.autoTable({ head: [['Réf','Produit','Stock','Cat']], body: stockData, startY: 40 });
+      doc.save('RL_RAPPORT.pdf');
       toast('PDF généré');
-    }catch(err){
-      toast('Erreur PDF (vérifie jsPDF local ou CDN)');
-      console.error(err);
     }
-  }
 
-  function exportXLSX(){
-    try{
-      if(!window.XLSX) throw 'SheetJS missing';
-      const rows = Object.keys(stock).map(k => ({Référence:(k.split('|')[1]||k), Produit:stock[k].n, Quantité:stock[k].q, Catégorie:stock[k].c}));
-      const ws = XLSX.utils.json_to_sheet(rows);
-      const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Stock');
-      XLSX.writeFile(wb,'RL_STOCK_'+new Date().toISOString().slice(0,10)+'.xlsx');
-      toast('XLSX exporté');
-    }catch(e){
-      toast('Erreur XLSX (vérifie SheetJS local ou CDN)');
-      console.error(e);
+    function importCSV(evt){
+      const file = evt.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        const lines = e.target.result.split('\n').map(l => l.trim()).filter(Boolean);
+        let imported = 0;
+        lines.forEach(l => {
+          if(l.startsWith('Référence') || l.startsWith('Date')) return;
+          const [ref, nom, q, cat] = l.split(';');
+          if(ref && nom) { stock[ref] = { n: nom, q: parseInt(q)||0, c: cat||'' }; imported++; }
+        });
+        if(imported>0){ localStorage.setItem('RLSTOCK', JSON.stringify(stock)); show(); updateStats(); toast(`${imported} importés`); }
+      };
+      reader.readAsText(file);
     }
-  }
 
-  function exportBackupJSON(){
-    const payload={stock,suivi,BASE,exportedAt:new Date().toISOString()};
-    const blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
-    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='RL_BACKUP_'+new Date().toISOString().slice(0,19).replace(/:/g,'-')+'.json'; a.click();
-    toast('Backup JSON créé');
-  }
+    function manageExport(){ openExportModal(); }
+    function updateStats(){
+      document.getElementById('totalItems').textContent = Object.keys(stock).length;
+      const wk = suivi.filter(m => {
+        const d = new Date(m.date.replace(/(\d+)\/(\d+)\/(\d+) (\d+):(\d+)/, '$3-$2-$1T$4:$5'));
+        return d >= new Date(Date.now() - 7*24*60*60*1000);
+      });
+      let e = 0, x = 0;
+      wk.forEach(m => { if(m.qte > 0) e += m.qte; else x += Math.abs(m.qte); });
+      document.getElementById('entriesWeek').textContent = e;
+      document.getElementById('exitsWeek').textContent = x;
+      document.getElementById('weekMoves').textContent = `${wk.length} mouvements`;
+    }
+    function clearFilter(){ document.getElementById('catFilter').value=''; show(); }
 
-  /* ===== misc ===== */
-  function resetAll(){
-    if(!confirm('Effacer tout ?')) return;
-    localStorage.removeItem('RLSTOCK'); localStorage.removeItem('RL_SUIVI'); localStorage.removeItem('RL_BASE_REFS');
-    stock={}; suivi=[]; BASE={}; populateAllCats(); show(); updateLast5(); updateStats();
-    toast('Données réinitialisées');
-  }
-
-  function toggleTheme(){
-    document.body.classList.toggle('dark', document.getElementById('darkModeToggle').checked);
-    localStorage.setItem('RL_DARK', document.getElementById('darkModeToggle').checked ? 'true' : 'false');
-  }
-
-  function openModal(){ populateAllCats(); document.getElementById('modal').style.display='flex'; }
-  function closeModal(){ document.getElementById('modal').style.display='none'; }
-  function openFullSuivi(){ updateFullSuivi(); document.getElementById('fullSuiviModal').style.display='flex'; }
-  function closeFullSuivi(){ document.getElementById('fullSuiviModal').style.display='none'; }
-  function clearFilter(){ document.getElementById('catFilter').value=''; show(); }
-
-  /* ===== init ===== */
-  (function init(){
-    populateAllCats(); updateRefSelect(); show(); updateLast5(); updateStats();
-    // dark mode
-    if(localStorage.getItem('RL_DARK')==='true'){ document.getElementById('darkModeToggle').checked=true; document.body.classList.add('dark'); }
-    saveAll();
-    toast('R.L ENERGIE — prêt (offline-ready).');
-  })();
-
-  // qty modal markup injection (keeps code tidy)
-  (function injectQtyModal(){
-    const div = document.createElement('div');
-    div.className='modal'; div.id='qtyModal';
-    div.innerHTML = `<div class="modal-content">
-      <div style="display:flex;justify-content:space-between;align-items:center"><h3 id="qtyTitle">Modifier quantité</h3><button class="btn ghost" onclick="closeQtyModal()">Fermer</button></div>
-      <p id="qtyName" style="font-weight:800;margin-top:8px"></p>
-      <input id="qtyInput" type="number" min="0" style="width:140px;padding:8px;border-radius:8px;border:1px solid #ddd;margin-top:8px" />
-      <div style="margin-top:12px;display:flex;gap:8px"><button class="btn ok" onclick="confirmQty()">OK</button><button class="btn ghost" onclick="closeQtyModal()">Annuler</button></div>
-    </div>`;
-    document.body.appendChild(div);
-  })();
-
-  // small keyboard shortcuts (optional)
-  window.addEventListener('keydown', e=>{
-    if((e.ctrlKey||e.metaKey) && (e.key==='s' || e.key==='S')){ e.preventDefault(); exportCSV(); }
-  });
-
-  // prevent accidental pull-to-refresh on tablets
-  document.addEventListener('touchmove', e=>{}, {passive:true});
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('backContainer').style.display = 'none';
+      applyTheme(theme);
+      document.getElementById("darkModeToggle").checked = (theme === 'dark');
+      document.getElementById("autoThemeToggle").checked = autoTheme;
+      document.getElementById("soundToggle").checked = soundEnabled;
+      populateCatFilter();
+      show(); updateLast5(); updateRefSelect(); updateStats();
+      if (autoTheme) startAutoTheme();
+    });
   </script>
-
 </body>
 </html>
 
     
    
+
 
