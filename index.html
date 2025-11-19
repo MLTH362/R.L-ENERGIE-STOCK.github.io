@@ -122,33 +122,26 @@
     <button class="small" onclick="openSettings()" title="Paramètres"><i class="fas fa-cog"></i></button>
   </div>
 
-  <!-- MODAL GESTION COMPLÈTE -->
+  <!-- MODALS -->
   <div class="modal" id="modal"><div class="modal-content">
     <span class="close" onclick="closeModal()">x</span>
-    <h2>Gérer catégories & références</h2>
-    <div style="margin:20px 0;padding-bottom:20px;border-bottom:2px solid #3336">
-      <h3 style="color:var(--success)">Ajouter une catégorie</h3>
-      <input id="newCatInput" placeholder="Nom de la nouvelle catégorie" style="width:70%;margin:10px 0">
-      <button class="btn ok" onclick="addNewCategory()">Créer catégorie</button>
-    </div>
-    <div style="margin:20px 0;padding-bottom:20px;border-bottom:2px solid #3336">
+    <h2>Gérer les références</h2>
+    <div style="border-bottom:2px solid rgba(255,255,255,0.06);padding-bottom:14px;margin-bottom:16px">
       <h3 style="color:var(--success)">Ajouter une référence</h3>
-      <select id="addRefCat"><option value="">Choisir catégorie</option></select>
-      <input id="newRef" placeholder="/REF">
-      <input id="newNom" placeholder="Nom produit">
-      <button class="btn ok" style="margin-top:10px" onclick="saveNewRef()">AJOUTER RÉFÉRENCE</button>
+      <div style="display:grid;gap:10px;">
+        <select id="newCat"></select>
+        <input id="newRef" placeholder="/REF">
+        <input id="newNom" placeholder="Nom produit">
+      </div>
+      <button class="btn ok" style="margin-top:10px" onclick="saveNewRef()">AJOUTER</button>
     </div>
     <div>
-      <h3 style="color:var(--danger)">Supprimer</h3>
-      <select id="delCat" onchange="loadRefsToDelete()"><option value="">Catégorie à supprimer</option></select>
-      <button class="btn" style="background:var(--danger);margin:10px 0" onclick="deleteCategory()">Supprimer catégorie</button>
-      <br>
-      <select id="delRefCat" onchange="loadRefsToDelete()"><option value="">Catégorie</option></select>
-      <select id="delRefSelect"><option value="">Référence à supprimer</option></select>
-      <button class="btn" style="background:var(--danger);margin-top:10px" onclick="deleteRef()">Supprimer référence</button>
+      <h3 style="color:var(--danger)">Supprimer une référence</h3>
+      <select id="delCat" onchange="loadRefsToDelete()"><option value="">Catégorie</option></select>
+      <select id="delRefSelect"><option value="">Référence</option></select>
+      <button class="btn" style="background:var(--danger);color:#fff;margin-top:10px" onclick="deleteRef()">SUPPRIMER</button>
     </div>
   </div></div>
-
   <div class="modal" id="qtyModal"><div class="modal-content" style="max-width:420px;padding:30px">
     <span class="close" onclick="closeQtyModal()">x</span>
     <h2 id="qtyTitle">Combien ?</h2>
@@ -159,14 +152,12 @@
       <button class="btn" style="background:#666;color:#fff" onclick="closeQtyModal()">Annuler</button>
     </div>
   </div></div>
-
   <div class="modal" id="fullSuiviModal"><div class="modal-content" style="max-width:1000px">
     <span class="close" onclick="closeFullSuivi()">x</span>
     <h2>Suivi complet</h2>
     <input type="text" class="s" id="searchFullSuivi" placeholder="Recherche..." oninput="updateFullSuivi()" style="margin-bottom:15px">
     <div style="overflow-x:auto"><table><thead><tr><th>Date</th><th>Réf</th><th>Produit</th><th>Qté</th><th>Type</th></tr></thead><tbody id="fullSuiviTab"></tbody></table></div>
   </div></div>
-
   <div class="modal" id="settingsModal"><div class="modal-content">
     <span class="close" onclick="closeSettings()">x</span>
     <h2>Paramètres</h2>
@@ -202,32 +193,29 @@ function saveAll() {
   localStorage.setItem('RL_BASE_REFS', JSON.stringify(BASE));
 }
 
-/* === CATÉGORIES & RÉFS === */
+/* === CATÉGORIES === */
 function populateAllCats() {
   const ids = ['cat','catFilter','addRefCat','delCat','delRefCat'];
   ids.forEach(id => {
     const sel = document.getElementById(id);
-    const current = sel ? sel.value : '';
     sel.innerHTML = (id==='catFilter' ? '<option value="">Toutes catégories</option>' : '<option value="">Choisir...</option>');
-    Object.keys(BASE).sort().forEach(c => {
-      sel.innerHTML += `<option value="${c}" ${c===current?'selected':''}>${c}</option>`;
-    });
+    Object.keys(BASE).sort().forEach(c => sel.innerHTML += `<option value="${c}">${c}</option>`);
   });
 }
 
+/* === RÉFÉRENCES === */
 function updateRefSelect() {
   const cat = document.getElementById('cat').value;
   const sel = document.getElementById('refSelect');
   sel.innerHTML = '<option value="">Sélectionner...</option>';
   if (cat && BASE[cat]) {
     BASE[cat].forEach(i => {
-      const [ref] = i.split('→');
+      const ref = i.split('→')[0];
       sel.innerHTML += `<option value="${ref}">${ref}</option>`;
     });
   }
   fillNomFromSelect();
 }
-
 function fillNomFromSelect() {
   const cat = document.getElementById('cat').value;
   const ref = document.getElementById('refSelect').value;
@@ -287,7 +275,7 @@ function deleteRef() {
   saveAll(); populateAllCats(); loadRefsToDelete(); show(); toast('Référence supprimée');
 }
 
-/* === STOCK & MOUVEMENTS === */
+/* === STOCK === */
 function add() {
   const cat = document.getElementById('cat').value;
   const ref = document.getElementById('refSelect').value;
@@ -388,7 +376,6 @@ function updateStats() {
   document.getElementById('entriesWeek').textContent = entries;
   document.getElementById('exitsWeek').textContent = exits;
 }
-
 function generatePDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF('l','mm','a4');
@@ -399,7 +386,6 @@ function generatePDF() {
   doc.save('RL_STOCK.pdf');
   toast('PDF généré !');
 }
-
 function manageExport() {
   const data = [['RÉF','PRODUIT','QTÉ','CATÉGORIE'], ...Object.keys(stock).map(k => [stock[k].ref, stock[k].nom, stock[k].q, stock[k].cat])];
   const csv = '\uFEFF' + data.map(r => r.join(';')).join('\n');
@@ -431,7 +417,9 @@ if (localStorage.getItem('RL_DARK') === 'true') {
   document.body.classList.add('dark');
   document.getElementById('darkModeToggle').checked = true;
 }
-toast('R.L ENERGIE v5K FINAL — TOUT EST LÀ !');
+toast('R.L ENERGIE v5K FINAL — PARFAIT !');
 </script>
 </body>
 </html>
+    
+   
