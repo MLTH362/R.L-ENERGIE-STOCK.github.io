@@ -8,24 +8,17 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
-  <!-- jsPDF / XLSX -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-  <!-- Firebase compat SDK (Realtime Database) -->
+  <!-- Firebase compat SDK (pratique pour intégration simple) -->
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
 
   <style>
     :root{
-      --primary:#00aaff;--primary-dark:#0088cc;--success:#00d46a;--danger:#ff3b5c;
-      --pdf-red:#e63946;--excel-green:#1e7e34;--sync-purple:#9b59b6;
-      --bg-dark:linear-gradient(135deg,#0a0a0a,#151515);
-      --bg-light:linear-gradient(135deg,#eaf6ff,#dbeefe);
-      --card-dark:#151515;--card-light:#ffffff;--text-dark:#eaeef2;
-      --text-light:#2d3436;--radius-lg:20px;--shadow-md:0 12px 40px rgba(0,0,0,.45);
-      --transition:all .28s cubic-bezier(.4,0,.2,1);
+      --primary:#00aaff;--primary-dark:#0088cc;--success:#00d46a;--danger:#ff3b5c;--pdf-red:#e63946;--excel-green:#1e7e34;--sync-purple:#9b59b6;--bg-dark:linear-gradient(135deg,#0a0a0a,#151515);--bg-light:linear-gradient(135deg,#eaf6ff,#dbeefe);--card-dark:#151515;--card-light:#ffffff;--text-dark:#eaeef2;--text-light:#2d3436;--radius-lg:20px;--shadow-md:0 12px 40px rgba(0,0,0,.45);--transition:all .28s cubic-bezier(.4,0,.2,1);
     }
     *{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif;}
     body{background:var(--bg-light);color:var(--text-light);min-height:100vh;padding:22px 12px;transition:var(--transition);overflow-x:hidden;}
@@ -45,8 +38,8 @@
     @media(max-width:980px){.g{grid-template-columns:1fr 1fr;}}
     @media(max-width:540px){.g{grid-template-columns:1fr;}}
     label{font-weight:700;margin-bottom:8px;display:block;}
-    input, select{width:100%;padding:12px 14px;border-radius:12px;border:2px solid #e6eef8;background:#fff;color:#000;}
-    body.dark input, body.dark select{border-color:rgba(255,255,255,0.08);background:transparent;color:inherit;}
+    input{width:100%;padding:12px 14px;border-radius:12px;border:2px solid #e6eef8;background:#fff;color:#000;}
+    body.dark input{border-color:rgba(255,255,255,0.08);background:transparent;color:inherit;}
     .btn{padding:12px 18px;border-radius:12px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:8px;border:none;cursor:pointer;transition:var(--transition);box-shadow:0 4px 12px rgba(0,0,0,.25);font-size:0.95rem;}
     .ok{background:var(--success);color:#000;}
     .new{background:#ff6b35;color:#fff;}
@@ -160,7 +153,7 @@
     <button onclick="openSettings()" title="Paramètres"><i class="fas fa-cog"></i></button>
   </div>
 
-  <!-- selectors & modals (same as before) -->
+  <!-- Selectors & Modals (identiques) -->
   <div class="full-select-modal" id="catSelector" onclick="this.style.display='none'">
     <div class="full-select" onclick="event.stopPropagation()">
       <div class="full-select-header">Choisir une catégorie</div>
@@ -242,88 +235,40 @@
   </div>
 
   <script>
-    /*******************************
-     *  CONFIG FIREBASE — collez vos infos
-     *******************************/
+    /********** CONFIG FIREBASE **********/
+    // Remplace si nécessaire par ta config (celle-ci correspond à ton projet si tu l'as fourni)
     const firebaseConfig = {
       apiKey: "AIzaSyDKW6EIYv7LmGKHII3y6muiMxUKXSLxzu4",
       authDomain: "rl-energie-stock.firebaseapp.com",
-      databaseURL: "https://rl-energie-stock-default-rtdb.europe-west1.firebasedatabase.app",
       projectId: "rl-energie-stock",
-      storageBucket: "rl-energie-stock.firebased.appspot.com",
+      storageBucket: "rl-energie-stock.firebasestorage.app",
       messagingSenderId: "767757673730",
       appId: "1:767757673730:web:252f74ba07cb1880ae4e1b",
       measurementId: "G-4Y0XSBHR16"
     };
-
-    // Initialize Firebase (compat)
+    // Init firebase compat
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+    const db = firebase.firestore();
 
-    /*******************************
-     *  UTILS — ENCODE / DECODE KEYS
-     *  (Firebase Realtime DB n'autorise pas . # $ / [ ])
-     *******************************/
-    function encodeKey(key) {
-      if (typeof key !== 'string') key = String(key);
-      return key
-        .replace(/\./g, '_DOT_')
-        .replace(/#/g, '_HASH_')
-        .replace(/\$/g, '_DOLLAR_')
-        .replace(/\//g, '_SLASH_')
-        .replace(/\[/g, '_OB_')
-        .replace(/\]/g, '_CB_');
-    }
-    function decodeKey(key) {
-      return key
-        .replace(/_DOT_/g, '.')
-        .replace(/_HASH_/g, '#')
-        .replace(/_DOLLAR_/g, '$')
-        .replace(/_SLASH_/g, '/')
-        .replace(/_OB_/g, '[')
-        .replace(/_CB_/g, ']');
-    }
-
-    function encodeObjectKeys(obj) {
-      // Returns a new object with encoded keys; for nested objects we assume values are primitives or simple objects (we only need top-level encoding for stock keys)
-      const out = {};
-      Object.entries(obj || {}).forEach(([k,v]) => {
-        out[encodeKey(k)] = v;
-      });
-      return out;
-    }
-    function decodeObjectKeys(obj) {
-      const out = {};
-      Object.entries(obj || {}).forEach(([k,v]) => {
-        out[decodeKey(k)] = v;
-      });
-      return out;
-    }
-
-    /*******************************
-     *  DEFAULTS & STORAGE
-     *******************************/
+    /********** DONNÉES PAR DÉFAUT **********/
     const DEFAULT_BASE = {
-      "PANNEAUX": [
-        "/PVQCEL-G9-385KWC→QCells G9 385 Wc",
-        "/PVQCEL-G10-540→QCells G10 540 Wc",
-        "/PVTRINA400→Trina 400 Wc",
-        "/PVTRINA550→Trina Vertex S+ 550 Wc",
-        "/PVJA-545→JA Solar 545 Wc"
-        // ... tu peux rajouter la liste complète ici
-      ],
-      "COFFRET": ["/COF220A→Coffret 2x20A MC4","/COFDC20A→Coffret DC 20A"],
-      "MONITORING": ["/CLE-WINET-S→Clé Wi-Fi SUNGROW","/CLE-WINET-L→Clé Wi-Fi SUNGROW LAN"]
-      // ... autres catégories
+      "PANNEAUX": ["/PVQCEL-G9-385KWC→QCells G9 385 Wc","/PVQCEL-G10-540→QCells G10 540 Wc","/PVTRINA400→Trina 400 Wc","/PVTRINA550→Trina Vertex S+ 550 Wc","/PVJA-545→JA Solar 545 Wc","/PVLONGI-550→Longi Hi-MO 6 550 Wc","/PVLONGI-660→Longi Hi-MO X6 660 Wc","/PVVICTRON-440→Victron 440 Wc","/PVDUAL-550→Dualsun Flash 550 Wc"],
+      "COFFRET": ["/COF220A→Coffret 2x20A MC4","/COFDC20A→Coffret DC 20A","/COFDC40A→Coffret DC 40A"],
+      "MONITORING": ["/CLE-WINET-S→Clé Wi-Fi SUNGROW","/CLE-WINET-L→Clé Wi-Fi SUNGROW LAN","/CLE-ETH-SG→Ethernet SUNGROW"],
+      "DIVERS PETIT MATÉRIEL": ["/COLSONGR19→Colson grand 19mm","/COLSONPT12→Colson petit 12mm","/FIX-RALU→Fixation rail alu"],
+      "CÂBLE SOLAIRE": ["/R2V4X10→Câble R2V 4x10mm²","/R2V4X16→Câble R2V 4x16mm²"],
+      "ONDULEURS": ["/OND3-MO-HUA→Huawei SUN2000 3kW","/OND5-MO-HUA→Huawei SUN2000 5kW"],
+      "DISJONCTEUR DIFFÉRENTIEL": ["/AGG160A→AGG 160A 4P","/AGG250A→AGG 250A 4P"]
     };
 
-    // AUTO-REPAIR BASE
+    /********** ÉTAT LOCAL **********/
     let BASE = JSON.parse(localStorage.getItem('RL_BASE_REFS') || 'null');
     if (!BASE || typeof BASE !== 'object' || Object.keys(BASE).length < Object.keys(DEFAULT_BASE).length) {
       BASE = JSON.parse(JSON.stringify(DEFAULT_BASE));
       localStorage.setItem('RL_BASE_REFS', JSON.stringify(BASE));
     }
 
+    // stock est un objet local : clé = "cat|ref" -> {cat, ref, nom, q, updated, deleted}
     let stock = JSON.parse(localStorage.getItem('RLSTOCK') || '{}');
     let suivi = JSON.parse(localStorage.getItem('RL_SUIVI') || '[]');
     let soundEnabled = localStorage.getItem('RL_SOUND') !== 'false';
@@ -331,9 +276,7 @@
     let selectedRef = '';
     let selectedNom = '';
 
-    /*******************************
-     *  UI helpers
-     *******************************/
+    /********** UTILITAIRES **********/
     function toast(msg, ms = 2500) {
       const t = document.getElementById('toast');
       const d = document.createElement('div');
@@ -343,76 +286,107 @@
       setTimeout(() => d.remove(), ms);
       playSound();
     }
-
     function playSound() {
       if (soundEnabled) new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=').play().catch(()=>{});
     }
 
-    /*******************************
-     *  SAVE / SYNC (encode keys before write)
-     *******************************/
-    async function saveAll() {
-      try {
-        localStorage.setItem('RLSTOCK', JSON.stringify(stock));
-        localStorage.setItem('RL_SUIVI', JSON.stringify(suivi));
-        localStorage.setItem('RL_BASE_REFS', JSON.stringify(BASE));
-
-        // Encode keys before writing to Realtime DB
-        const encStock = encodeObjectKeys(stock);
-        await db.ref('/stock/currentStock').set({ stock: encStock });
-        // suivi is an array: safe to write directly (it's an array of objects)
-        await db.ref('/suivi/mouvements').set({ suivi: suivi });
-        // base refs - safe
-        await db.ref('/baseRefs/categories').set({ BASE: BASE });
-
-        // success
-        //toast('Sauvegardé sur Firebase');
-        return true;
-      } catch (err) {
-        console.error('Firebase write error', err);
-        toast('Erreur écriture Firebase');
-        return false;
-      }
+    // Convertir stock objet -> tableau pour Firestore (évite problèmes de clé)
+    function stockToArray(obj) {
+      return Object.keys(obj).map(k => {
+        const it = obj[k];
+        return Object.assign({ _key: k }, it);
+      });
     }
+    // Rebuild local stock depuis tableau cloud (fusion en respectant updated)
+    function mergeStockFromArray(arr) {
+      if (!Array.isArray(arr)) return;
+      arr.forEach(it => {
+        const k = it._key || (it.cat && it.ref ? (it.cat + '|' + it.ref) : null);
+        if (!k) return;
+        const existing = stock[k];
+        // si pas existant -> ajouter
+        if (!existing) {
+          stock[k] = it;
+        } else {
+          // garder la version la plus récente selon updated
+          const existingUpdated = existing.updated || 0;
+          const incomingUpdated = it.updated || 0;
+          if (incomingUpdated >= existingUpdated) {
+            stock[k] = it;
+          }
+        }
+      });
+    }
+    // Nettoyage UI : supprimer tombstones trop anciens (optionnel) - pas exécuté maintenant
+
+    /********** FIRESTORE SYNC **********/
+    // Document unique pour stock/suivi/BASE
+    const APP_DOC = db.collection('rl_app').doc('data');
 
     async function syncWithFirebase() {
       toast("Synchronisation...");
       try {
-        // read stock
-        const stockSnap = await db.ref('/stock/currentStock').once('value');
-        const sData = stockSnap.val();
-        if (sData && sData.stock) {
-          // decode keys
-          const decoded = decodeObjectKeys(sData.stock);
-          // merge: prefer cloud for missing keys, but keep local quantities if local is more recent? we'll simply replace local with cloud for simplicity
-          stock = decoded;
+        const snap = await APP_DOC.get();
+        if (snap.exists) {
+          const d = snap.data() || {};
+          // Merge stock: cloud -> local
+          if (Array.isArray(d.stock)) {
+            mergeStockFromArray(d.stock);
+          }
+          // Merge suivi (simple merge by timestamp: add cloud entries not present)
+          if (Array.isArray(d.suivi)) {
+            // keep unique by JSON string/time
+            const existingSet = new Set(suivi.map(s => JSON.stringify(s)));
+            d.suivi.forEach(s => {
+              const key = JSON.stringify(s);
+              if (!existingSet.has(key)) {
+                suivi.push(s);
+              }
+            });
+          }
+          // Merge BASE if provided
+          if (d.BASE) BASE = d.BASE;
+          // Persist local and show
+          saveLocalOnly(); // save local storage
+          show(); updateLast5(); updateStats();
+          document.getElementById("syncStatus").innerHTML = `<i class="fas fa-check"></i> Sync OK • ${new Date().toLocaleString()}`;
+          toast("Synchronisé !");
+        } else {
+          // Aucun doc -> créer à partir du local
+          await saveAll(); // créer doc cloud
+          document.getElementById("syncStatus").innerHTML = `<i class="fas fa-check"></i> Sync OK (initial) • ${new Date().toLocaleString()}`;
+          toast("Initial cloud créé !");
         }
-
-        // read suivi
-        const suiviSnap = await db.ref('/suivi/mouvements').once('value');
-        const suData = suiviSnap.val();
-        if (suData && Array.isArray(suData.suivi)) {
-          suivi = suData.suivi;
-        }
-
-        // read base refs
-        const baseSnap = await db.ref('/baseRefs/categories').once('value');
-        const bData = baseSnap.val();
-        if (bData && bData.BASE) BASE = bData.BASE;
-
-        saveAll(); // write back merged (will re-encode)
-        show(); updateLast5(); updateStats();
-        document.getElementById("syncStatus").innerHTML = `<i class="fas fa-check"></i> Sync OK • ${new Date().toLocaleString()}`;
-        toast("Synchronisé !");
-      } catch (e) {
-        console.error('sync error', e);
+      } catch (err) {
+        console.error("sync error", err);
         toast("Erreur connexion");
       }
     }
 
-    /*******************************
-     *  MAIN app logic (identical/compatible)
-     *******************************/
+    // Sauvegarde complète : localStorage + Firestore (utiliser quand tu veux pousser)
+    async function saveAll() {
+      saveLocalOnly();
+      try {
+        const payload = {
+          stock: stockToArray(stock),
+          suivi: suivi.slice(-2000), // limite la taille
+          BASE: BASE,
+          updatedAt: Date.now()
+        };
+        await APP_DOC.set(payload, { merge: true });
+      } catch (err) {
+        console.error("Firebase write error", err);
+        toast("Firebase write error");
+      }
+    }
+    // Sauvegarde locale seulement
+    function saveLocalOnly() {
+      localStorage.setItem('RLSTOCK', JSON.stringify(stock));
+      localStorage.setItem('RL_SUIVI', JSON.stringify(suivi));
+      localStorage.setItem('RL_BASE_REFS', JSON.stringify(BASE));
+    }
+
+    /********** LOGIQUE APPLI (ajout, retrait, delete...) **********/
     function openCatSelector() {
       const list = document.getElementById('catList');
       list.innerHTML = '';
@@ -463,13 +437,15 @@
       const qte = parseInt(document.getElementById('qte').value) || 0;
       if (qte <= 0) return toast("Quantité invalide");
       const key = selectedCat + '|' + selectedRef;
-      if (!stock[key]) stock[key] = {cat: selectedCat, ref: selectedRef, nom: selectedNom, q: 0};
+      const now = Date.now();
+      if (!stock[key]) stock[key] = { cat: selectedCat, ref: selectedRef, nom: selectedNom, q: 0, updated: now, deleted: false };
       stock[key].q = (stock[key].q || 0) + qte;
-      suivi.push({date: new Date().toLocaleString(), ref: selectedRef, nom: selectedNom, qte, type:'+'});
-      saveAll().then(() => {
-        show(); updateLast5(); updateStats();
-        toast(`+${qte} ${selectedNom}`);
-      });
+      stock[key].updated = now;
+      stock[key].deleted = false;
+      suivi.push({ date: new Date().toLocaleString(), ref: selectedRef, nom: selectedNom, qte, type: '+' , ts: now});
+      saveAll();
+      show(); updateLast5(); updateStats();
+      toast(`+${qte} ${selectedNom}`);
       document.getElementById('qte').value = 1;
     }
 
@@ -486,20 +462,27 @@
       const q = parseInt(document.getElementById('qtyInput').value);
       if (!q || q <= 0) return toast('Quantité invalide');
       const key = window.currentQtyKey;
+      const now = Date.now();
       if (!window.isAdding && (stock[key].q || 0) < q) return toast('Pas assez en stock');
       if (window.isAdding) {
         stock[key].q = (stock[key].q || 0) + q;
-        suivi.push({date: new Date().toLocaleString(), ref: stock[key].ref, nom: stock[key].nom, qte: q, type:'+'});
+        stock[key].updated = now;
+        stock[key].deleted = false;
+        suivi.push({ date: new Date().toLocaleString(), ref: stock[key].ref, nom: stock[key].nom, qte: q, type: '+' , ts: now});
         toast(`+${q} ${stock[key].nom}`);
       } else {
         stock[key].q = (stock[key].q || 0) - q;
-        suivi.push({date: new Date().toLocaleString(), ref: stock[key].ref, nom: stock[key].nom, qte: q, type:'-'});
+        stock[key].updated = now;
+        suivi.push({ date: new Date().toLocaleString(), ref: stock[key].ref, nom: stock[key].nom, qte: q, type: '-' , ts: now});
         toast(`-${q} ${stock[key].nom}`);
-        if (stock[key].q <= 0) delete stock[key];
+        if (stock[key].q <= 0) {
+          // tombstone instead of deletion (so other clients know it was deleted)
+          stock[key].q = 0;
+          stock[key].deleted = true;
+          stock[key].updated = now;
+        }
       }
-      saveAll().then(()=>{
-        show(); updateLast5(); updateStats();
-      });
+      saveAll(); show(); updateLast5(); updateStats();
       closeQtyModal();
     }
 
@@ -511,9 +494,12 @@
     function deleteFull(key) {
       if (!confirm('Supprimer définitivement cet article ?')) return;
       const item = stock[key];
-      suivi.push({date: new Date().toLocaleString(), ref: item.ref, nom: item.nom, qte: item.q, type: 'Supprimé'});
-      delete stock[key];
-      saveAll().then(()=>{ show(); updateLast5(); updateStats(); toast(`${item.nom} supprimé`); });
+      const now = Date.now();
+      // Set tombstone deleted = true
+      stock[key] = Object.assign({}, item, { q: 0, deleted: true, updated: now });
+      suivi.push({ date: new Date().toLocaleString(), ref: item.ref, nom: item.nom, qte: item.q, type: 'Supprimé', ts: now});
+      saveAll(); show(); updateLast5(); updateStats();
+      toast(`${item.nom} supprimé`);
     }
 
     function show() {
@@ -524,6 +510,7 @@
       Object.keys(stock).sort((a,b) => (stock[a].nom||'').localeCompare(stock[b].nom||'')).forEach(k => {
         const i = stock[k];
         if (!i) return;
+        if (i.deleted) return; // don't show deleted items
         if (filter && i.cat !== filter) return;
         if (search && !i.nom.toLowerCase().includes(search) && !i.ref.toLowerCase().includes(search)) return;
         tot += i.q || 0;
@@ -547,7 +534,8 @@
     function updateLast5() {
       const search = (document.getElementById('searchSuivi').value || '').toLowerCase();
       const tab = document.getElementById('suiviTab'); tab.innerHTML = '';
-      (suivi.slice(-10).reverse().filter(m => !search || (m.nom||'').toLowerCase().includes(search) || (m.ref||'').toLowerCase().includes(search))).forEach(m => {
+      const recent = suivi.slice(-10).reverse().filter(m => !search || (m.nom||'').toLowerCase().includes(search) || (m.ref||'').toLowerCase().includes(search));
+      recent.forEach(m => {
         const tr = document.createElement('tr');
         tr.innerHTML = `<td>${m.date}</td><td>${m.ref}</td><td style="text-align:left;padding-left:12px">${m.nom}</td><td>${m.type}${m.qte}</td><td>${m.type==='+'?'Entrée':(m.type==='-'?'Sortie':'Autre')}</td>`;
         tab.appendChild(tr);
@@ -562,7 +550,7 @@
     function updateFullSuivi() {
       const search = (document.getElementById('searchFullSuivi').value || '').toLowerCase();
       const tab = document.getElementById('fullSuiviTab'); tab.innerHTML = '';
-      (suivi.slice().reverse().filter(m => !search || (m.nom||'').toLowerCase().includes(search) || (m.ref||'').toLowerCase().includes(search))).forEach(m => {
+      suivi.slice().reverse().filter(m => !search || (m.nom||'').toLowerCase().includes(search) || (m.ref||'').toLowerCase().includes(search)).forEach(m => {
         const tr = document.createElement('tr');
         tr.innerHTML = `<td>${m.date}</td><td>${m.ref}</td><td style="text-align:left;padding-left:12px">${m.nom}</td><td>${m.type}${m.qte}</td><td>${m.type==='+'?'Entrée':(m.type==='-'?'Sortie':'Autre')}</td>`;
         tab.appendChild(tr);
@@ -584,9 +572,13 @@
       document.getElementById('exitsWeek').textContent = exits;
     }
 
+    /********** EXPORT / PDF **********/
     function manageExport() {
       const rows = [['RÉF','PRODUIT','QTÉ','CATÉGORIE']];
-      Object.keys(stock).forEach(k => rows.push([stock[k].ref, stock[k].nom, stock[k].q, stock[k].cat]));
+      Object.keys(stock).forEach(k => {
+        const s = stock[k];
+        if (s && !s.deleted) rows.push([s.ref, s.nom, s.q, s.cat]);
+      });
       const csv = "\uFEFF" + rows.map(r => r.join(';')).join('\n');
       const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
       const url = URL.createObjectURL(blob);
@@ -599,7 +591,7 @@
     }
 
     function exportExcel() {
-      const rows = Object.keys(stock).map(k => ({Réf: stock[k].ref, Produit: stock[k].nom, Qté: stock[k].q, Catégorie: stock[k].cat}));
+      const rows = Object.keys(stock).filter(k => !stock[k].deleted).map(k => ({Réf: stock[k].ref, Produit: stock[k].nom, Qté: stock[k].q, Catégorie: stock[k].cat}));
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.json_to_sheet(rows);
       XLSX.utils.book_append_sheet(wb, ws, 'Stock');
@@ -612,12 +604,13 @@
       const doc = new jsPDF('l','mm','a4');
       doc.setFontSize(18);
       doc.text('R.L ENERGIE - STOCK', 148, 16, null, null, 'center');
-      const data = Object.keys(stock).map(k => [stock[k].ref, stock[k].nom, stock[k].q, stock[k].cat]);
+      const data = Object.keys(stock).filter(k => !stock[k].deleted).map(k => [stock[k].ref, stock[k].nom, stock[k].q, stock[k].cat]);
       doc.autoTable({ head: [['RÉF','PRODUIT','QTÉ','CATÉGORIE']], body: data, startY: 30, styles: { fontSize: 9 } });
       doc.save('RL_STOCK.pdf');
       toast('PDF généré !');
     }
 
+    /********** REFS management **********/
     function saveNewRef() {
       let cat = document.getElementById('newCat').value;
       const newCatInput = document.getElementById('newCatInput').value.trim();
@@ -628,7 +621,8 @@
       if (!BASE[cat]) BASE[cat] = [];
       if (BASE[cat].some(x => x.startsWith(ref))) return toast('Référence existe déjà');
       BASE[cat].push(ref + '→' + nom);
-      saveAll().then(()=>{ toast('Référence ajoutée !'); });
+      saveAll();
+      toast('Référence ajoutée !');
       document.getElementById('newRef').value = '';
       document.getElementById('newNom').value = '';
       document.getElementById('newCatInput').value = '';
@@ -656,7 +650,8 @@
       if (!confirm(`Supprimer ${ref} de ${cat} ?`)) return;
       BASE[cat] = BASE[cat].filter(x => !x.startsWith(ref));
       if (BASE[cat].length === 0) delete BASE[cat];
-      saveAll().then(()=>{ toast('Référence supprimée'); });
+      saveAll();
+      toast('Référence supprimée');
       closeModal();
     }
 
@@ -681,6 +676,7 @@
       });
     }
 
+    /********** INIT **********/
     window.addEventListener('load', () => {
       document.body.classList.toggle('dark', localStorage.getItem('RL_DARK') === 'true');
       populateCatSelects();
@@ -692,7 +688,6 @@
   </script>
 </body>
 </html>
-   
 
 
 
