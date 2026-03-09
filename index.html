@@ -92,7 +92,7 @@
   <div id="toast"></div>
 
   <header>
-    <div class="logo-top">< R.L ENERGIE ></div>
+    <div class="logo-top">&lt; R.L ENERGIE &gt;</div>
     <h1>Inventaire</h1>
     <div class="sub">Stock & Suivi</div>
     <div class="week-moves" id="weekMoves">0 mouvements cette semaine</div>
@@ -431,6 +431,7 @@
      *******************************/
     let BASE = JSON.parse(localStorage.getItem('RL_BASE_REFS') || 'null');
 
+    // helper mergeBase used before it might be referenced
     function mergeBase(defaults, cloud, local) {
       const out = {};
       const allCats = new Set([
@@ -554,12 +555,8 @@
       }
     }
 
+    // expose sync
     window.syncWithFirebase = async function syncWithFirebase() {
-      if (!navigator.onLine) {
-        toast("📴 Hors ligne — données sauvegardées localement.<br>🔄 Sync automatique dès retour connexion.");
-        return;
-      }
-
       toast("Synchronisation...");
       try {
         const snap = await APP_DOC.get();
@@ -931,6 +928,7 @@
       });
     }
 
+    // local reset (no cloud push)
     function localReset(){
       if (!confirm('Confirmer la réinitialisation locale ?')) return;
       stock = {};
@@ -942,6 +940,7 @@
       toast('Local réinitialisé (cloud inchangé)');
     }
 
+    // prompt and then cloud reset if admin code OK
     function promptCloudReset(){
       const code = prompt('Code admin pour réinitialiser le cloud :');
       if (code === null) return;
@@ -955,7 +954,9 @@
 
     async function cloudReset() {
       try {
+        // set cloud doc to empty sets
         await APP_DOC.set({ stock: [], suivi: [], BASE: {}, updatedAt: Date.now() }, { merge: false });
+        // Also clear local to match (if you want local kept, remove next lines)
         stock = {};
         suivi = [];
         BASE = {};
@@ -980,14 +981,9 @@
       show();
       updateLast5();
       updateStats();
-
-      // Sync automatique quand la connexion revient (sans recharger la page)
-      window.addEventListener('online', () => {
-        console.log('🌐 Connexion revenue → synchronisation automatique');
-        window.syncWithFirebase();
-      });
-
-      toast('R.L ENERGIE chargé – prêt. Fonctionne hors ligne. Sync auto dès retour connexion.');
+      // IMPORTANT : syncWithFirebase n'est plus lancé automatiquement au chargement.
+      // L'utilisateur doit cliquer sur le bouton SYNC pour synchroniser.
+      toast('R.L ENERGIE chargé – prêt. Clique sur SYNC pour synchroniser.');
     });
   </script>
 </body>
