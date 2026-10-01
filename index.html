@@ -1,990 +1,115 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>R.L ENERGIE — STOCK PRO v7 ULTIME</title>
+<meta charset="UTF-8">
+<title>💸 Mon Compteur d'Argent</title>
+<style>
+body {
+  font-family: Arial;
+  text-align: center;
+  background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+  color: white;
+}
 
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+.container {
+  margin-top: 50px;
+}
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+h1 {
+  font-size: 2.5em;
+}
 
-  <!-- Firebase compat SDK (Firestore) -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+.money {
+  font-size: 3em;
+  margin: 20px 0;
+  color: #00ff99;
+}
 
-  <style>
-    :root{
-      --primary:#00aaff;--primary-dark:#0088cc;--success:#00d46a;--danger:#ff3b5c;
-      --pdf-red:#e63946;--excel-green:#1e7e34;--sync-purple:#9b59b6;
-      --bg-dark:linear-gradient(135deg,#0a0a0a,#151515);
-      --bg-light:linear-gradient(135deg,#eaf6ff,#dbeefe);
-      --card-dark:#151515;--card-light:#ffffff;--text-dark:#eaeef2;
-      --text-light:#2d3436;--radius-lg:20px;--shadow-md:0 12px 40px rgba(0,0,0,.45);
-      --transition:all .28s cubic-bezier(.4,0,.2,1);
-    }
-    *{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif;}
-    body{background:var(--bg-light);color:var(--text-light);min-height:100vh;padding:22px 12px;transition:var(--transition);overflow-x:hidden;}
-    body.dark{background:var(--bg-dark);color:var(--text-dark);}
-    header{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;padding:26px;text-align:center;border-radius:var(--radius-lg);box-shadow:var(--shadow-md);margin-bottom:28px;position:relative;overflow:hidden;}
-    .logo-top{position:absolute;top:14px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.85);color:#fff;padding:6px 14px;border-radius:12px;font-weight:900;}
-    body.dark .logo-top{background:#fff;color:var(--primary);}
-    h1{font-size:2.4rem;font-weight:900;margin-top:26px;}
-    .stats-bar{margin-top:14px;display:flex;gap:14px;justify-content:center;flex-wrap:wrap;}
-    .stat{background:rgba(255,255,255,.07);padding:8px 14px;border-radius:12px;font-weight:700;}
-    .sync-status{font-size:0.9rem;margin-top:8px;opacity:0.9;color:#fff;}
-    .card{background:var(--card-light);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);margin:18px auto;padding:0;overflow:hidden;max-width:1100px;transition:var(--transition);}
-    body.dark .card{background:var(--card-dark);}
-    .ch{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;padding:18px 26px;font-weight:800;display:flex;justify-content:space-between;align-items:center;}
-    .cb{padding:26px;}
-    .g{display:grid;grid-template-columns:1fr 1fr 100px 100px 130px 130px;gap:14px;align-items:end;}
-    @media(max-width:980px){.g{grid-template-columns:1fr 1fr;}}
-    @media(max-width:540px){.g{grid-template-columns:1fr;}}
-    label{font-weight:700;margin-bottom:8px;display:block;}
-    input, select{width:100%;padding:12px 14px;border-radius:12px;border:2px solid #e6eef8;background:#fff;color:#000;}
-    body.dark input, body.dark select{border-color:rgba(255,255,255,0.08);background:transparent;color:inherit;}
-    .btn{padding:12px 18px;border-radius:12px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:8px;border:none;cursor:pointer;transition:var(--transition);box-shadow:0 4px 12px rgba(0,0,0,.25);font-size:0.95rem;}
-    .ok{background:var(--success);color:#000;}
-    .new{background:#ff6b35;color:#fff;}
-    .pdf{background:var(--pdf-red);color:#fff;}
-    .excel{background:var(--excel-green);color:#fff;}
-    .sync-btn{background:var(--sync-purple);color:#fff;}
-    .s{width:100%;padding:14px;border-radius:14px;border:2px solid #e6eef8;margin:18px 0;}
-    table{width:100%;border-collapse:separate;border-spacing:0 12px;}
-    th{background:var(--primary);color:white;padding:12px;border-radius:12px 12px 0 0;font-weight:800;}
-    td{background:#fff;padding:12px;text-align:center;border-radius:12px;}
-    body.dark td{background:rgba(255,255,255,0.05);}
-    .fab{position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:12px;z-index:9999;}
-    .fab button{border-radius:50px;padding:16px;background:var(--primary);color:#fff;border:none;font-size:1.5rem;box-shadow:var(--shadow-md);width:56px;height:56px;}
-    .fab button.pdf{background:var(--pdf-red);}
-    .fab button.excel{background:var(--excel-green);}
-    .fab button.sync-btn{background:var(--sync-purple);}
-    .qb{font-size:1.8rem;cursor:pointer;background:none;border:none;}
-    .qv{font-weight:900;font-size:1.4rem;}
-    .qv.out{color:var(--danger);}
-    .del-btn{background:var(--danger);color:#fff;padding:8px 12px;border-radius:8px;cursor:pointer;}
-    .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);align-items:center;justify-content:center;z-index:10000;}
-    .modal-content{background:var(--card-light);border-radius:var(--radius-lg);padding:28px;width:90%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-md);}
-    body.dark .modal-content{background:var(--card-dark);}
-    .close{float:right;font-size:2rem;cursor:pointer;}
-    #toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:10001;}
-    .toast-msg{background:var(--success);color:#000;padding:12px 24px;border-radius:50px;margin:8px;box-shadow:var(--shadow-md);animation:toast 2.5s forwards;}
-    @keyframes toast{0%{opacity:0;transform:translateY(20px)} 10%{opacity:1;transform:translateY(0)} 90%{opacity:1} 100%{opacity:0}}
-    .full-select-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.95);z-index:10001;align-items:center;justify-content:center;}
-    .full-select{background:var(--card-light);width:94%;max-width:600px;max-height:92vh;border-radius:20px;overflow:hidden;box-shadow:var(--shadow-md);}
-    body.dark .full-select{background:var(--card-dark);}
-    .full-select-header{background:var(--primary);color:#fff;padding:12px 22px;text-align:center;font-weight:900;font-size:1.2rem;display:flex;align-items:center;gap:12px;justify-content:space-between;}
-    .full-select-list{max-height:72vh;overflow-y:auto;padding:8px 16px;}
-    .full-select-item{padding:14px 12px;border-bottom:1px solid #ddd;cursor:pointer;transition:var(--transition);font-size:1.05rem;font-weight:700;display:block;}
-    body.dark .full-select-item{border-color:#444;}
-    .full-select-item:hover{background:#e6f7ff;}
-    body.dark .full-select-item:hover{background:#333;}
-    .full-select-item strong{color:var(--primary);}
-    .selected-display{margin-top:8px;font-weight:700;color:var(--primary);font-size:1.1rem;min-height:28px;padding:8px 12px;background:rgba(0,170,255,0.1);border-radius:12px;}
-    .fs-search{width:100%;padding:10px;border-radius:10px;border:1px solid #ddd;margin-bottom:10px;}
-    .muted{color:#666;font-size:0.9rem;}
-  </style>
+input {
+  padding: 10px;
+  font-size: 1em;
+  width: 100px;
+  text-align: center;
+}
+
+button {
+  padding: 10px 20px;
+  margin: 10px;
+  border: none;
+  background: #00aaff;
+  color: white;
+  font-size: 1em;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+button:hover {
+  background: #0088cc;
+}
+
+.progress {
+  width: 80%;
+  background: #444;
+  border-radius: 10px;
+  margin: 20px auto;
+}
+
+.bar {
+  height: 20px;
+  width: 0%;
+  background: #00ff99;
+  border-radius: 10px;
+}
+</style>
 </head>
+
 <body>
-  <div id="toast"></div>
 
-  <header>
-    <div class="logo-top">&lt; R.L ENERGIE &gt;</div>
-    <h1>Inventaire</h1>
-    <div class="sub">Stock & Suivi</div>
-    <div class="week-moves" id="weekMoves">0 mouvements cette semaine</div>
-    <div class="stats-bar">
-      <div class="stat">Total: <span id="totalItems">0</span></div>
-      <div class="stat">Entrées: <span id="entriesWeek">0</span></div>
-      <div class="stat">Sorties: <span id="exitsWeek">0</span></div>
-    </div>
-    <div class="sync-status" id="syncStatus">Dernière sync : jamais</div>
-  </header>
+<div class="container">
+  <h1>💸 Mon Compteur</h1>
 
-  <div class="card">
-    <div class="ch">Ajouter un produit <button class="btn sync-btn" onclick="window.syncWithFirebase()">SYNC</button></div>
-    <div class="cb">
-      <div class="g">
-        <div>
-          <label>Catégorie</label>
-          <button class="btn" style="width:100%;justify-content:space-between;font-size:1rem;padding:14px" onclick="window.openCatSelector()">Choisir catégorie <i class="fas fa-chevron-down"></i></button>
-          <div class="selected-display" id="selectedCatDisplay"></div>
-        </div>
-        <div>
-          <label>Référence</label>
-          <button class="btn" style="width:100%;justify-content:space-between;font-size:1rem;padding:14px" onclick="window.openRefSelector()">Choisir référence <i class="fas fa-chevron-down"></i></button>
-          <div class="selected-display" id="selectedRefDisplay"></div>
-        </div>
-        <div><label>Nom</label><input id="nom" readonly placeholder="Auto-rempli"></div>
-        <div><label>Qté</label><input id="qte" type="number" value="1" min="1"></div>
-        <div><button class="btn ok" onclick="window.add()">AJOUTER</button></div>
-        <div><button class="btn new" onclick="openModal()">Gérer refs</button></div>
-      </div>
-      <input type="text" class="s" id="search" placeholder="Recherche instantanée..." oninput="show()">
-    </div>
+  <div class="money" id="total">0 €</div>
+
+  <input type="number" id="amount" placeholder="€">
+  <br>
+  <button onclick="addMoney()">Ajouter</button>
+  <button onclick="reset()">Reset</button>
+
+  <h2>Objectif : 50€</h2>
+  <div class="progress">
+    <div class="bar" id="bar"></div>
   </div>
+</div>
 
-  <div class="card">
-    <div class="ch">Stock — <span id="tot">0</span> produits</div>
-    <div class="cb">
-      <div style="display:flex;gap:12px;margin-bottom:12px;">
-        <select id="catFilter" onchange="show()"><option value="">Toutes catégories</option></select>
-        <button class="btn" onclick="clearFilter()">Réinitialiser (local)</button>
-      </div>
-      <table>
-        <thead><tr><th>Réf</th><th>Produit</th><th>Stock</th><th>Catégorie</th><th>Actions</th></tr></thead>
-        <tbody id="tab"></tbody>
-      </table>
-    </div>
-  </div>
+<script>
+let total = localStorage.getItem("money") 
+  ? parseFloat(localStorage.getItem("money")) 
+  : 0;
 
-  <div class="card">
-    <div class="ch">Derniers mouvements (10)</div>
-    <div class="cb">
-      <input type="text" class="s" id="searchSuivi" placeholder="Recherche mouvements..." oninput="updateLast5()">
-      <table>
-        <thead><tr><th>Date</th><th>Réf</th><th>Produit</th><th>Qté</th><th>Type</th></tr></thead>
-        <tbody id="suiviTab"></tbody>
-      </table>
-      <div style="margin-top:12px;text-align:center;"><button class="btn" onclick="openFullSuivi()">Voir plus</button></div>
-    </div>
-  </div>
+function update() {
+  document.getElementById("total").innerText = total.toFixed(2) + " €";
 
-  <div class="fab">
-    <button onclick="manageExport()" title="CSV"><i class="fas fa-table"></i></button>
-    <button class="excel" onclick="exportExcel()" title="Excel"><i class="fas fa-file-excel"></i></button>
-    <button class="pdf" onclick="generatePDF()" title="PDF"><i class="fas fa-file-pdf"></i></button>
-    <button class="sync-btn" onclick="window.syncWithFirebase()" title="Sync"><i class="fas fa-cloud"></i></button>
-    <button onclick="openSettings()" title="Paramètres"><i class="fas fa-cog"></i></button>
-  </div>
+  let percent = (total / 50) * 100;
+  document.getElementById("bar").style.width = percent + "%";
 
-  <!-- selectors & modals -->
-  <div class="full-select-modal" id="catSelector" onclick="this.style.display='none'">
-    <div class="full-select" onclick="event.stopPropagation()">
-      <div class="full-select-header">
-        <div style="flex:1;text-align:left;font-weight:900">Choisir une catégorie</div>
-        <button class="btn" onclick="document.getElementById('catSelector').style.display='none'">Fermer</button>
-      </div>
-      <div style="padding:12px;">
-        <input id="catSearch" class="fs-search" placeholder="Recherche catégorie..." oninput="window.filterCatList()">
-      </div>
-      <div class="full-select-list" id="catList"></div>
-    </div>
-  </div>
+  localStorage.setItem("money", total);
+}
 
-  <div class="full-select-modal" id="refSelector" onclick="this.style.display='none'">
-    <div class="full-select" onclick="event.stopPropagation()">
-      <div class="full-select-header">
-        <div style="flex:1;text-align:left;font-weight:900">Choisir une référence</div>
-        <button class="btn" onclick="document.getElementById('refSelector').style.display='none'">Fermer</button>
-      </div>
-      <div style="padding:12px;">
-        <input id="refSearch" class="fs-search" placeholder="Recherche référence..." oninput="window.filterRefList()">
-      </div>
-      <div class="full-select-list" id="refList"></div>
-    </div>
-  </div>
+function addMoney() {
+  let val = parseFloat(document.getElementById("amount").value);
+  if (!isNaN(val)) {
+    total += val;
+    update();
+  }
+}
 
-  <div class="modal" id="modal">
-    <div class="modal-content">
-      <span class="close" onclick="closeModal()">×</span>
-      <h2>Gérer les références</h2>
-      <hr>
-      <h4>Ajouter une référence / catégorie</h4>
-      <table style="width:100%;margin:15px 0">
-        <tr>
-          <td><label>Catégorie (existante)</label><select id="newCat" style="width:100%"></select></td>
-          <td><label>Nouvelle catégorie</label><input id="newCatInput" placeholder="Si vide = sélectionnée" style="width:100%"></td>
-        </tr>
-        <tr>
-          <td><label>Référence</label><input id="newRef" placeholder="Ex: /PVJA-999" style="width:100%"></td>
-          <td><label>Nom produit</label><input id="newNom" placeholder="Ex: JA Solar 999 Wc" style="width:100%"></td>
-        </tr>
-        <tr>
-          <td colspan="2"><button class="btn ok" onclick="saveNewRef()" style="width:100%;margin-top:10px">Ajouter la référence / catégorie</button></td>
-        </tr>
-      </table>
-      <hr>
-      <h4>Supprimer une référence</h4>
-      <table style="width:100%;margin:15px 0">
-        <tr>
-          <td><label>Catégorie</label><select id="delCat" onchange="loadRefsToDelete()" style="width:100%"></select></td>
-          <td><label>Référence à supprimer</label><select id="delRefSelect" style="width:100%"></select></td>
-        </tr>
-        <tr>
-          <td colspan="2"><button class="btn pdf" onclick="deleteRef()" style="width:100%;margin-top:10px">Supprimer définitivement</button></td>
-        </tr>
-      </table>
-    </div>
-  </div>
+function reset() {
+  total = 0;
+  update();
+}
 
-  <div class="modal" id="qtyModal">
-    <div class="modal-content" style="max-width:400px">
-      <span class="close" onclick="closeQtyModal()">×</span>
-      <h2 id="qtyTitle">Ajouter</h2>
-      <p id="qtySubtitle"></p>
-      <label>Quantité</label>
-      <input id="qtyInput" type="number" min="1" style="font-size:2rem;text-align:center;margin:20px 0">
-      <div style="display:flex;gap:12px;">
-        <button class="btn ok" style="flex:1" onclick="confirmQty()">Valider</button>
-        <button class="btn" style="flex:1;background:#888" onclick="closeQtyModal()">Annuler</button>
-      </div>
-    </div>
-  </div>
+update();
+</script>
 
-  <div class="modal" id="fullSuiviModal">
-    <div class="modal-content">
-      <span class="close" onclick="document.getElementById('fullSuiviModal').style.display='none'">×</span>
-      <h2>Historique complet</h2>
-      <input type="text" class="s" id="searchFullSuivi" placeholder="Recherche..." oninput="updateFullSuivi()">
-      <table><thead><tr><th>Date</th><th>Réf</th><th>Produit</th><th>Qté</th><th>Type</th></tr></thead><tbody id="fullSuiviTab"></tbody></table>
-    </div>
-  </div>
-
-  <div class="modal" id="settingsModal">
-    <div class="modal-content" style="max-width:420px">
-      <span class="close" onclick="closeSettings()">×</span>
-      <h2>Paramètres</h2>
-      <label><input type="checkbox" id="soundToggle" onchange="soundEnabled=this.checked;localStorage.setItem('RL_SOUND',this.checked)"> Son activé</label><br><br>
-      <label><input type="checkbox" id="darkToggle" onchange="document.body.classList.toggle('dark',this.checked);localStorage.setItem('RL_DARK',this.checked)"> Mode sombre</label><br><br>
-
-      <div style="margin-top:8px;margin-bottom:8px;">
-        <button class="btn pdf" onclick="if(confirm('Tout effacer localement ?')){localReset()}">Réinitialiser local</button>
-      </div>
-
-      <div style="margin-top:8px;margin-bottom:8px;">
-        <button class="btn" onclick="promptCloudReset()">Réinitialiser cloud (ADMIN)</button>
-      </div>
-
-      <div style="margin-top:12px;">
-        <small class="muted">Après avoir réinitialisé le cloud, clique SYNC pour actualiser l'app partout.</small>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    /*******************************
-     *  FIRESTORE CONFIG
-     *******************************/
-    const firebaseConfig = {
-      apiKey: "AIzaSyDKW6EIYv7LmGKHII3y6muiMxUKXSLxzu4",
-      authDomain: "rl-energie-stock.firebaseapp.com",
-      projectId: "rl-energie-stock",
-      storageBucket: "rl-energie-stock.firebasestorage.app",
-      messagingSenderId: "767757673730",
-      appId: "1:767757673730:web:252f74ba07cb1880ae4e1b",
-      measurementId: "G-4Y0XSBHR16"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-
-    /*******************************
-     *  DEFAULT_BASE
-     *******************************/
-    const DEFAULT_BASE = {
-      "PANNEAUX": [
-        "/PVQCEL-G9-385KWC→QCells G9 385 Wc",
-        "/PVQCEL-G10-540→QCells G10 540 Wc",
-        "/PVTRINA400→Trina 400 Wc",
-        "/PVTRINA550→Trina Vertex S+ 550 Wc",
-        "/PVJA-545→JA Solar 545 Wc",
-        "/PVLONGI-550→Longi Hi-MO 6 550 Wc",
-        "/PVLONGI-660→Longi Hi-MO X6 660 Wc",
-        "/PVVICTRON-440→Victron 440 Wc",
-        "/PVDUAL-550→Dualsun Flash 550 Wc",
-        "/PVREC-405→REC Alpha Pure 405 Wc",
-        "/PVREC-470→REC Alpha Pure-R 470 Wc",
-        "/PVJINKO-615→Jinko Tiger Neo 615 Wc",
-        "/PVTRINA-425→Trina Vertex S 425 Wc",
-        "/PVTRINA-435→Trina Vertex S 435 Wc",
-        "/PVJA-550→JA Solar 550 Wc",
-        "/PVLONGI-540→Longi Hi-MO 6 540 Wc",
-        "/PVREC-410→REC Alpha Pure 410 Wc",
-        "/PVREC-420→REC Alpha Pure 420 Wc",
-        "/PVREC-430→REC Alpha Pure 430 Wc",
-        "/PVJINKO-620→Jinko Tiger Neo 620 Wc",
-        "/PVJINKO-625→Jinko Tiger Neo 625 Wc",
-        "/PVJA-555→JA Solar 555 Wc",
-        "/PVJA-560→JA Solar 560 Wc",
-        "/PVJA-565→JA Solar 565 Wc",
-        "/PVJA-570→JA Solar 570 Wc",
-        "/PVJA-575→JA Solar 575 Wc",
-        "/PVJA-580→JA Solar 580 Wc",
-        "/PVJA-585→JA Solar 585 Wc",
-        "/PVJA-590→JA Solar 590 Wc",
-        "/PVJA-595→JA Solar 595 Wc",
-        "/PVJA-600→JA Solar 600 Wc",
-        "/PVJA-605→JA Solar 605 Wc",
-        "/PVJA-610→JA Solar 610 Wc",
-        "/PVJA-615→JA Solar 615 Wc",
-        "/PVJA-620→JA Solar 620 Wc",
-        "/PVJA-625→JA Solar 625 Wc",
-        "/PVJA-630→JA Solar 630 Wc"
-      ],
-      "COFFRET": [
-        "/COF220A→Coffret 2x20A MC4",
-        "/COFDC20A→Coffret DC 20A",
-        "/COFDC40A→Coffret DC 40A",
-        "/COFDC63A→Coffret DC 63A",
-        "/COFDC100A→Coffret DC 100A",
-        "/COFDC160A→Coffret DC 160A",
-        "/COFDC250A→Coffret DC 250A",
-        "/COFDC400A→Coffret DC 400A",
-        "/COFDC500A→Coffret DC 500A",
-        "/COFDC630A→Coffret DC 630A",
-        "/COFDC800A→Coffret DC 800A",
-        "/COFDC1000A→Coffret DC 1000A",
-        "/COFDC1250A→Coffret DC 1250A",
-        "/COFDC1600A→Coffret DC 1600A"
-      ],
-      "MONITORING": [
-        "/CLE-WINET-S→Clé Wi-Fi SUNGROW",
-        "/CLE-WINET-L→Clé Wi-Fi SUNGROW LAN",
-        "/CLE-ETH-SG→Ethernet SUNGROW",
-        "/CLE-4G-SG→4G SUNGROW",
-        "/CLE-WIFI-HUA→Wi-Fi Huawei",
-        "/CLE-4G-HUA→4G Huawei",
-        "/CLE-WIFI-FRON→Wi-Fi Fronius",
-        "/CLE-ETH-FRON→Ethernet Fronius",
-        "/CLE-4G-FRON→4G Fronius",
-        "/CLE-ETH-ENP→Ethernet Enphase",
-        "/CLE-4G-ENP→4G Enphase"
-      ],
-      "DIVERS PETIT MATÉRIEL": [
-        "/COLSONGR19→Colson grand 19mm",
-        "/COLSONPT12→Colson petit 12mm",
-        "/FIX-RALU→Fixation rail alu",
-        "/MC4-MALE→Connecteur MC4 mâle",
-        "/MC4-FEMALE→Connecteur MC4 femelle",
-        "/MC4-OUTIL→Outil sertissage MC4",
-        "/VIS-RAIL→Vis fixation rail M8",
-        "/ECROU-RAIL→Écrou rail M8",
-        "/RONDELLE→Rondelle M8",
-        "/FIX-TOIT→Fixation toit tuile",
-        "/FIX-TOIT-ARD→Fixation toit ardoise",
-        "/FIX-TOIT-BAC→Fixation toit bac acier",
-        "/FIX-TOIT-PLAT→Fixation toit plat",
-        "/FIX-SOL→Fixation sol",
-        "/FIX-FACADE→Fixation façade",
-        "/OPTIMISEUR→Optimiseur de puissance",
-        "/OPTIMISEUR-SG→Optimiseur Sungrow",
-        "/OPTIMISEUR-HUA→Optimiseur Huawei"
-      ],
-      "CÂBLE SOLAIRE": [
-        "/R2V4X10→Câble R2V 4x10mm²",
-        "/R2V4X16→Câble R2V 4x16mm²",
-        "/R2V4X25→Câble R2V 4x25mm²",
-        "/R2V4X35→Câble R2V 4x35mm²",
-        "/H1Z2Z2-6→Câble solaire 6mm² rouge/noir",
-        "/H1Z2Z2-10→Câble solaire 10mm² rouge/noir",
-        "/H1Z2Z2-4→Câble solaire 4mm² rouge/noir",
-        "/TERRE-6→Câble terre 6mm² vert/jaune",
-        "/TERRE-16→Câble terre 16mm² vert/jaune",
-        "/TERRE-25→Câble terre 25mm² vert/jaune",
-        "/TERRE-35→Câble terre 35mm² vert/jaune"
-      ],
-      "ONDULEURS": [
-        "/OND3-MO-HUA→Huawei SUN2000 3kW",
-        "/OND5-MO-HUA→Huawei SUN2000 5kW",
-        "/OND10-MO-HUA→Huawei SUN2000 10kW",
-        "/OND20-MO-HUA→Huawei SUN2000 20kW",
-        "/OND30-MO-HUA→Huawei SUN2000 30kW",
-        "/OND50-MO-HUA→Huawei SUN2000 50kW",
-        "/OND100-MO-HUA→Huawei SUN2000 100kW",
-        "/OND8-SG→Sungrow SG8.0RT",
-        "/OND17-SG→Sungrow SG17RT",
-        "/OND33-SG→Sungrow SG33CX",
-        "/OND50-SG→Sungrow SG50CX",
-        "/OND110-SG→Sungrow SG110CX",
-        "/OND3-ENP→Enphase IQ8M",
-        "/OND5-FRON→Fronius Primo 5.0",
-        "/OND6-FRON→Fronius Primo 6.0",
-        "/OND8-FRON→Fronius Primo 8.2",
-        "/OND10-FRON→Fronius Primo 10.0",
-        "/OND15-SMA→SMA Sunny Tripower 15kW",
-        "/OND20-SMA→SMA Sunny Tripower 20kW",
-        "/OND25-SMA→SMA Sunny Tripower 25kW"
-      ],
-      "DISJONCTEUR DIFFÉRENTIEL": [
-        "/AGG160A→AGG 160A 4P",
-        "/AGG250A→AGG 250A 4P",
-        "/AGG400A→AGG 400A 4P",
-        "/AGG630A→AGG 630A 4P",
-        "/PARAF40A→Parafoudre 40kA Type 2",
-        "/PARAF65A→Parafoudre 65kA Type 2",
-        "/DJDC1000V→Disjoncteur DC 1000V 32A",
-        "/DJDC1000V-63A→Disjoncteur DC 1000V 63A",
-        "/DJDC1000V-100A→Disjoncteur DC 1000V 100A",
-        "/DJAC-40A→Disjoncteur AC 40A 4P",
-        "/DJAC-63A→Disjoncteur AC 63A 4P",
-        "/DJAC-100A→Disjoncteur AC 100A 4P",
-        "/DJAC-125A→Disjoncteur AC 125A 4P",
-        "/DJAC-160A→Disjoncteur AC 160A 4P"
-      ]
-    };
-
-    /*******************************
-     *  LOCAL STATE
-     *******************************/
-    let BASE = JSON.parse(localStorage.getItem('RL_BASE_REFS') || 'null');
-
-    // helper mergeBase used before it might be referenced
-    function mergeBase(defaults, cloud, local) {
-      const out = {};
-      const allCats = new Set([
-        ...Object.keys(defaults || {}),
-        ...Object.keys(cloud || {}),
-        ...Object.keys(local || {})
-      ]);
-      allCats.forEach(cat => {
-        const set = new Set();
-        (defaults[cat] || []).forEach(x=>set.add(x));
-        (cloud[cat] || []).forEach(x=>set.add(x));
-        (local[cat] || []).forEach(x=>set.add(x));
-        out[cat] = Array.from(set);
-      });
-      return out;
-    }
-
-    if (!BASE || typeof BASE !== 'object' || Object.keys(BASE).length < Object.keys(DEFAULT_BASE).length) {
-      BASE = mergeBase(DEFAULT_BASE, {}, BASE || {});
-      localStorage.setItem('RL_BASE_REFS', JSON.stringify(BASE));
-    }
-
-    let stock = JSON.parse(localStorage.getItem('RLSTOCK') || '{}');
-    let suivi = JSON.parse(localStorage.getItem('RL_SUIVI') || '[]');
-    let soundEnabled = localStorage.getItem('RL_SOUND') !== 'false';
-    let selectedCat = '', selectedRef = '', selectedNom = '';
-
-    /*******************************
-     *  HELPERS & UTIL
-     *******************************/
-    function toast(msg, ms = 2500) {
-      const t = document.getElementById('toast');
-      const d = document.createElement('div');
-      d.className = 'toast-msg';
-      d.innerHTML = `<i class="fas fa-check-circle"></i> ${msg}`;
-      t.appendChild(d);
-      setTimeout(()=>d.remove(), ms);
-      playSound();
-    }
-    function playSound(){ if (soundEnabled) new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=').play().catch(()=>{}); }
-
-    function stockToArray(obj) {
-      return Object.keys(obj).map(k => {
-        const it = obj[k] || {};
-        return {
-          _key: k,
-          cat: it.cat || '',
-          ref: it.ref || '',
-          nom: it.nom || '',
-          q: Number(isFinite(it.q) ? it.q : 0),
-          updated: Number(isFinite(it.updated) ? it.updated : Date.now()),
-          deleted: !!it.deleted
-        };
-      });
-    }
-
-    function mergeStockFromArray(arr) {
-      if (!Array.isArray(arr)) return;
-      arr.forEach(it => {
-        if (!it || !it._key) return;
-        const k = it._key;
-        const incoming = {
-          cat: it.cat || '',
-          ref: it.ref || '',
-          nom: it.nom || '',
-          q: Number(isFinite(it.q) ? it.q : 0),
-          updated: Number(isFinite(it.updated) ? it.updated : 0),
-          deleted: !!it.deleted
-        };
-        const existing = stock[k];
-        if (!existing) {
-          stock[k] = incoming;
-        } else {
-          const eUpdated = existing.updated || 0;
-          const iUpdated = incoming.updated || 0;
-          if (iUpdated >= eUpdated) {
-            stock[k] = incoming;
-          }
-        }
-      });
-    }
-
-    function mergeSuiviFromArray(arr) {
-      if (!Array.isArray(arr)) return;
-      const exist = new Set(suivi.map(s => JSON.stringify(s)));
-      arr.forEach(s => {
-        try {
-          const key = JSON.stringify(s);
-          if (!exist.has(key)) {
-            suivi.push(s);
-            exist.add(key);
-          }
-        } catch(e){}
-      });
-    }
-
-    function saveLocalOnly() {
-      localStorage.setItem('RLSTOCK', JSON.stringify(stock));
-      localStorage.setItem('RL_SUIVI', JSON.stringify(suivi));
-      localStorage.setItem('RL_BASE_REFS', JSON.stringify(BASE));
-    }
-
-    /*******************************
-     *  FIRESTORE DOC
-     *******************************/
-    const APP_DOC = db.collection('rl_app').doc('data');
-
-    async function saveAll() {
-      saveLocalOnly();
-      const payload = {
-        stock: stockToArray(stock),
-        suivi: suivi.slice(-2000),
-        BASE: BASE,
-        updatedAt: Date.now()
-      };
-      try {
-        await APP_DOC.set(payload, { merge: true });
-      } catch (err) {
-        console.error('Firestore write error', err);
-        toast('Erreur écriture Firestore');
-      }
-    }
-
-    // expose sync
-    window.syncWithFirebase = async function syncWithFirebase() {
-      toast("Synchronisation...");
-      try {
-        const snap = await APP_DOC.get();
-        if (snap.exists) {
-          const d = snap.data() || {};
-          const cloudBASE = d.BASE || {};
-          BASE = mergeBase(DEFAULT_BASE, cloudBASE, BASE);
-          if (Array.isArray(d.stock)) mergeStockFromArray(d.stock);
-          if (Array.isArray(d.suivi)) mergeSuiviFromArray(d.suivi);
-          saveLocalOnly();
-          try { await APP_DOC.set({ stock: stockToArray(stock), BASE: BASE, suivi: suivi.slice(-2000), updatedAt: Date.now() }, { merge: true }); }
-          catch(e){ console.error('Push merged back error', e); }
-          show(); updateLast5(); updateStats();
-          document.getElementById("syncStatus").innerHTML = `<i class="fas fa-check"></i> Sync OK • ${new Date().toLocaleString()}`;
-          toast("Synchronisé !");
-        } else {
-          BASE = mergeBase(DEFAULT_BASE, {}, BASE);
-          await APP_DOC.set({
-            stock: stockToArray(stock),
-            suivi: suivi.slice(-2000),
-            BASE: BASE,
-            updatedAt: Date.now()
-          });
-          saveLocalOnly();
-          document.getElementById("syncStatus").innerHTML = `<i class="fas fa-check"></i> Sync OK (initial) • ${new Date().toLocaleString()}`;
-          toast("Initial cloud créé !");
-        }
-      } catch (err) {
-        console.error("sync error", err);
-        toast("Erreur connexion");
-      }
-    };
-
-    /*******************************
-     *  UI FUNCTIONS (exposed)
-     *******************************/
-    window.openCatSelector = function openCatSelector(){
-      const list = document.getElementById('catList');
-      list.innerHTML = '';
-      Object.keys(BASE).sort().forEach(cat => {
-        const div = document.createElement('div');
-        div.className = 'full-select-item';
-        div.textContent = cat;
-        div.onclick = () => {
-          selectedCat = cat;
-          document.getElementById('selectedCatDisplay').textContent = cat;
-          selectedRef = '';
-          selectedNom = '';
-          document.getElementById('selectedRefDisplay').textContent = '';
-          document.getElementById('nom').value = '';
-          document.getElementById('catSelector').style.display = 'none';
-        };
-        list.appendChild(div);
-      });
-      const s = document.getElementById('catSearch'); if (s) s.value = '';
-      document.getElementById('catSelector').style.display = 'flex';
-    };
-
-    window.filterCatList = function filterCatList(){
-      const q = (document.getElementById('catSearch').value || '').toLowerCase().trim();
-      const list = document.getElementById('catList');
-      list.innerHTML = '';
-      Object.keys(BASE).sort().forEach(cat => {
-        if (q && !cat.toLowerCase().includes(q)) return;
-        const div = document.createElement('div');
-        div.className = 'full-select-item';
-        div.textContent = cat;
-        div.onclick = () => {
-          selectedCat = cat;
-          document.getElementById('selectedCatDisplay').textContent = cat;
-          selectedRef = '';
-          selectedNom = '';
-          document.getElementById('selectedRefDisplay').textContent = '';
-          document.getElementById('nom').value = '';
-          document.getElementById('catSelector').style.display = 'none';
-        };
-        list.appendChild(div);
-      });
-    };
-
-    window.openRefSelector = function openRefSelector(){
-      if (!selectedCat) return toast("Choisis d'abord une catégorie");
-      const list = document.getElementById('refList');
-      list.innerHTML = '';
-      (BASE[selectedCat] || []).forEach(item => {
-        const parts = (item || '').split('→');
-        const ref = (parts[0] || '').trim();
-        const nom = (parts[1] || '').trim();
-        const div = document.createElement('div');
-        div.className = 'full-select-item';
-        div.innerHTML = `<strong>${ref}</strong><br><span style="font-size:0.95rem;color:#666">${nom}</span>`;
-        div.onclick = () => {
-          selectedRef = ref;
-          selectedNom = nom;
-          document.getElementById('selectedRefDisplay').innerHTML = `<strong>${ref}</strong> — ${nom}`;
-          document.getElementById('nom').value = nom;
-          document.getElementById('refSelector').style.display = 'none';
-        };
-        list.appendChild(div);
-      });
-      const s = document.getElementById('refSearch'); if (s) s.value = '';
-      document.getElementById('refSelector').style.display = 'flex';
-    };
-
-    window.filterRefList = function filterRefList(){
-      if (!selectedCat) return;
-      const q = (document.getElementById('refSearch').value || '').toLowerCase().trim();
-      const list = document.getElementById('refList');
-      list.innerHTML = '';
-      (BASE[selectedCat] || []).forEach(item => {
-        const parts = (item || '').split('→');
-        const ref = (parts[0] || '').trim();
-        const nom = (parts[1] || '').trim();
-        if (q && !(ref.toLowerCase().includes(q) || nom.toLowerCase().includes(q))) return;
-        const div = document.createElement('div');
-        div.className = 'full-select-item';
-        div.innerHTML = `<strong>${ref}</strong><br><span style="font-size:0.95rem;color:#666">${nom}</span>`;
-        div.onclick = () => {
-          selectedRef = ref;
-          selectedNom = nom;
-          document.getElementById('selectedRefDisplay').innerHTML = `<strong>${ref}</strong> — ${nom}`;
-          document.getElementById('nom').value = nom;
-          document.getElementById('refSelector').style.display = 'none';
-        };
-        list.appendChild(div);
-      });
-    };
-
-    window.add = function add(){
-      playSound();
-      if (!selectedCat || !selectedRef) return toast("Choisis catégorie + référence");
-      const qte = parseInt(document.getElementById('qte').value) || 0;
-      if (qte <= 0) return toast("Quantité invalide");
-      const key = selectedCat + '|' + selectedRef;
-      const now = Date.now();
-      if (!stock[key]) stock[key] = { cat: selectedCat, ref: selectedRef, nom: selectedNom, q: 0, updated: now, deleted: false };
-      stock[key].q = (stock[key].q || 0) + qte;
-      stock[key].updated = now;
-      stock[key].deleted = false;
-      suivi.push({ date: new Date().toLocaleString(), ref: selectedRef, nom: selectedNom, qte, type: '+' , ts: now});
-      saveAll();
-      show(); updateLast5(); updateStats();
-      toast(`+${qte} ${selectedNom}`);
-      document.getElementById('qte').value = 1;
-    };
-
-    function openQtyModal(key, add) {
-      window.currentQtyKey = key;
-      window.isAdding = add;
-      document.getElementById('qtyModal').style.display = 'flex';
-      document.getElementById('qtyTitle').textContent = add ? 'Ajouter' : 'Retirer';
-      document.getElementById('qtySubtitle').textContent = stock[key] ? `${stock[key].nom} — ${stock[key].q} en stock` : '';
-      document.getElementById('qtyInput').focus();
-    }
-
-    function confirmQty() {
-      const q = parseInt(document.getElementById('qtyInput').value);
-      if (!q || q <= 0) return toast('Quantité invalide');
-      const key = window.currentQtyKey;
-      const now = Date.now();
-      if (!window.isAdding && (stock[key].q || 0) < q) return toast('Pas assez en stock');
-      if (window.isAdding) {
-        stock[key].q = (stock[key].q || 0) + q;
-        stock[key].updated = now;
-        stock[key].deleted = false;
-        suivi.push({ date: new Date().toLocaleString(), ref: stock[key].ref, nom: stock[key].nom, qte: q, type: '+' , ts: now});
-        toast(`+${q} ${stock[key].nom}`);
-      } else {
-        stock[key].q = (stock[key].q || 0) - q;
-        stock[key].updated = now;
-        suivi.push({ date: new Date().toLocaleString(), ref: stock[key].ref, nom: stock[key].nom, qte: q, type: '-' , ts: now});
-        toast(`-${q} ${stock[key].nom}`);
-        if (stock[key].q <= 0) {
-          stock[key].q = 0;
-          stock[key].deleted = true;
-          stock[key].updated = now;
-        }
-      }
-      saveAll(); show(); updateLast5(); updateStats();
-      closeQtyModal();
-    }
-
-    function closeQtyModal() {
-      document.getElementById('qtyModal').style.display = 'none';
-      document.getElementById('qtyInput').value = '';
-    }
-
-    function deleteFull(key) {
-      if (!confirm('Supprimer définitivement cet article ?')) return;
-      const item = stock[key];
-      const now = Date.now();
-      stock[key] = Object.assign({}, item, { q: 0, deleted: true, updated: now });
-      suivi.push({ date: new Date().toLocaleString(), ref: item.ref, nom: item.nom, qte: item.q, type: 'Supprimé', ts: now});
-      saveAll(); show(); updateLast5(); updateStats();
-      toast(`${item.nom} supprimé`);
-    }
-
-    function show() {
-      const search = (document.getElementById('search').value || '').toLowerCase();
-      const filter = document.getElementById('catFilter').value;
-      const tab = document.getElementById('tab'); tab.innerHTML = '';
-      let tot = 0;
-      Object.keys(stock).sort((a,b) => (stock[a].nom||'').localeCompare(stock[b].nom||'')).forEach(k => {
-        const i = stock[k];
-        if (!i) return;
-        if (i.deleted) return;
-        if (filter && i.cat !== filter) return;
-        if (search && !i.nom.toLowerCase().includes(search) && !i.ref.toLowerCase().includes(search)) return;
-        tot += i.q || 0;
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td style="font-family:monospace">${i.ref}</td>
-          <td style="text-align:left;padding-left:12px">${i.nom}</td>
-          <td>
-            <button class="qb" onclick="openQtyModal('${k}', false)">−</button>
-            <span class="${(i.q||0) <= 0 ? 'qv out' : 'qv'}">${i.q||0}</span>
-            <button class="qb" onclick="openQtyModal('${k}', true)">+</button>
-          </td>
-          <td>${i.cat}</td>
-          <td><button class="del-btn" onclick="deleteFull('${k}')"><i class="fas fa-trash"></i></button></td>
-        `;
-        tab.appendChild(tr);
-      });
-      document.getElementById('tot').textContent = tot;
-    }
-
-    function updateLast5() {
-      const search = (document.getElementById('searchSuivi').value || '').toLowerCase();
-      const tab = document.getElementById('suiviTab'); tab.innerHTML = '';
-      const recent = suivi.slice(-10).reverse().filter(m => !search || (m.nom||'').toLowerCase().includes(search) || (m.ref||'').toLowerCase().includes(search));
-      recent.forEach(m => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${m.date}</td><td>${m.ref}</td><td style="text-align:left;padding-left:12px">${m.nom}</td><td>${m.type}${m.qte}</td><td>${m.type==='+'?'Entrée':(m.type==='-'?'Sortie':'Autre')}</td>`;
-        tab.appendChild(tr);
-      });
-    }
-
-    function openFullSuivi() {
-      document.getElementById('fullSuiviModal').style.display = 'flex';
-      updateFullSuivi();
-    }
-
-    function updateFullSuivi() {
-      const search = (document.getElementById('searchFullSuivi').value || '').toLowerCase();
-      const tab = document.getElementById('fullSuiviTab'); tab.innerHTML = '';
-      suivi.slice().reverse().filter(m => !search || (m.nom||'').toLowerCase().includes(search) || (m.ref||'').toLowerCase().includes(search)).forEach(m => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${m.date}</td><td>${m.ref}</td><td style="text-align:left;padding-left:12px">${m.nom}</td><td>${m.type}${m.qte}</td><td>${m.type==='+'?'Entrée':(m.type==='-'?'Sortie':'Autre')}</td>`;
-        tab.appendChild(tr);
-      });
-    }
-
-    function updateStats() {
-      const total = Object.values(stock).reduce((a,b)=>a+(b.q||0),0);
-      document.getElementById('totalItems').textContent = total;
-      const now = new Date();
-      const weekStart = new Date(now);
-      weekStart.setDate(now.getDate() - now.getDay());
-      weekStart.setHours(0,0,0,0);
-      const weekMoves = suivi.filter(m => new Date(m.date) >= weekStart);
-      const entries = weekMoves.filter(m => m.type === '+').reduce((a,b)=>a+b.qte,0);
-      const exits = weekMoves.filter(m => m.type === '-').reduce((a,b)=>a+b.qte,0);
-      document.getElementById('weekMoves').textContent = `${weekMoves.length} mouvements cette semaine`;
-      document.getElementById('entriesWeek').textContent = entries;
-      document.getElementById('exitsWeek').textContent = exits;
-    }
-
-    function manageExport() {
-      const rows = [['RÉF','PRODUIT','QTÉ','CATÉGORIE']];
-      Object.keys(stock).forEach(k => {
-        const s = stock[k];
-        if (s && !s.deleted) rows.push([s.ref, s.nom, s.q, s.cat]);
-      });
-      const csv = "\uFEFF" + rows.map(r => r.join(';')).join('\n');
-      const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `RL_STOCK_${new Date().toISOString().slice(0,10)}.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
-      toast('CSV exporté !');
-    }
-
-    function exportExcel() {
-      const rows = Object.keys(stock).filter(k => !stock[k].deleted).map(k => ({Réf: stock[k].ref, Produit: stock[k].nom, Qté: stock[k].q, Catégorie: stock[k].cat}));
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.json_to_sheet(rows);
-      XLSX.utils.book_append_sheet(wb, ws, 'Stock');
-      XLSX.writeFile(wb, `RL_STOCK_${new Date().toISOString().slice(0,10)}.xlsx`);
-      toast('Excel exporté !');
-    }
-
-    function generatePDF() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF('l','mm','a4');
-      doc.setFontSize(18);
-      doc.text('R.L ENERGIE - STOCK', 148, 16, null, null, 'center');
-      const data = Object.keys(stock).filter(k => !stock[k].deleted).map(k => [stock[k].ref, stock[k].nom, stock[k].q, stock[k].cat]);
-      doc.autoTable({ head: [['RÉF','PRODUIT','QTÉ','CATÉGORIE']], body: data, startY: 30, styles: { fontSize: 9 } });
-      doc.save('RL_STOCK.pdf');
-      toast('PDF généré !');
-    }
-
-    function saveNewRef() {
-      let cat = document.getElementById('newCat').value;
-      const newCatInput = document.getElementById('newCatInput').value.trim();
-      if (newCatInput) cat = newCatInput;
-      const ref = document.getElementById('newRef').value.trim();
-      const nom = document.getElementById('newNom').value.trim();
-      if (!cat || !ref || !nom) return toast('Remplis tout !');
-      if (!BASE[cat]) BASE[cat] = [];
-      if (BASE[cat].some(x => x.startsWith(ref))) return toast('Référence existe déjà');
-      BASE[cat].push(ref + '→' + nom);
-      saveAll();
-      toast('Référence ajoutée !');
-      document.getElementById('newRef').value = '';
-      document.getElementById('newNom').value = '';
-      document.getElementById('newCatInput').value = '';
-      closeModal();
-      populateCatSelects();
-    }
-
-    function loadRefsToDelete() {
-      const cat = document.getElementById('delCat').value;
-      const sel = document.getElementById('delRefSelect');
-      sel.innerHTML = '<option value="">Référence</option>';
-      if (!cat || !BASE[cat]) return;
-      BASE[cat].forEach(s => {
-        const [r,n] = s.split('→');
-        const opt = document.createElement('option');
-        opt.value = (r||'').trim();
-        opt.textContent = `${(r||'').trim()} — ${n||''}`;
-        sel.appendChild(opt);
-      });
-    }
-
-    function deleteRef() {
-      const cat = document.getElementById('delCat').value;
-      const ref = document.getElementById('delRefSelect').value;
-      if (!cat || !ref) return toast('Sélectionne tout');
-      if (!confirm(`Supprimer ${ref} de ${cat} ?`)) return;
-      BASE[cat] = BASE[cat].filter(x => !x.startsWith(ref));
-      if (BASE[cat].length === 0) delete BASE[cat];
-      saveAll();
-      toast('Référence supprimée');
-      closeModal();
-      populateCatSelects();
-    }
-
-    function openModal() { document.getElementById('modal').style.display = 'flex'; populateCatSelects(); loadRefsToDelete(); }
-    function closeModal() { document.getElementById('modal').style.display = 'none'; }
-    function openSettings() { document.getElementById('settingsModal').style.display = 'flex'; document.getElementById('soundToggle').checked = soundEnabled; document.getElementById('darkToggle').checked = document.body.classList.contains('dark'); }
-    function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; }
-    function clearFilter() { document.getElementById('catFilter').value = ''; show(); }
-
-    function populateCatSelects() {
-      const cats = Object.keys(BASE).sort();
-      ['catFilter','newCat','delCat'].forEach(id => {
-        const sel = document.getElementById(id);
-        if (sel) {
-          sel.innerHTML = '<option value="">Choisir...</option>';
-          cats.forEach(c => {
-            const o = document.createElement('option');
-            o.value = c; o.textContent = c;
-            sel.appendChild(o);
-          });
-        }
-      });
-    }
-
-    // local reset (no cloud push)
-    function localReset(){
-      if (!confirm('Confirmer la réinitialisation locale ?')) return;
-      stock = {};
-      suivi = [];
-      BASE = mergeBase(DEFAULT_BASE, {}, {});
-      saveLocalOnly();
-      populateCatSelects();
-      show(); updateLast5(); updateStats();
-      toast('Local réinitialisé (cloud inchangé)');
-    }
-
-    // prompt and then cloud reset if admin code OK
-    function promptCloudReset(){
-      const code = prompt('Code admin pour réinitialiser le cloud :');
-      if (code === null) return;
-      if (code === '1234') {
-        if (!confirm('Confirmer suppression complète du contenu cloud ? Cette action est irréversible !')) return;
-        cloudReset().catch(err => { console.error(err); toast('Erreur lors du reset cloud'); });
-      } else {
-        toast('Code admin invalide');
-      }
-    }
-
-    async function cloudReset() {
-      try {
-        // set cloud doc to empty sets
-        await APP_DOC.set({ stock: [], suivi: [], BASE: {}, updatedAt: Date.now() }, { merge: false });
-        // Also clear local to match (if you want local kept, remove next lines)
-        stock = {};
-        suivi = [];
-        BASE = {};
-        saveLocalOnly();
-        populateCatSelects();
-        show(); updateLast5(); updateStats();
-        document.getElementById("syncStatus").innerHTML = `<i class="fas fa-check"></i> Cloud vidé • ${new Date().toLocaleString()}`;
-        toast('Cloud réinitialisé (et local remis à zéro)');
-      } catch (e) {
-        console.error('cloudReset error', e);
-        toast('Erreur réinitialisation cloud');
-      }
-    }
-
-    /*******************************
-     *  INIT
-     *******************************/
-    window.addEventListener('load', () => {
-      document.body.classList.toggle('dark', localStorage.getItem('RL_DARK') === 'true');
-      BASE = mergeBase(DEFAULT_BASE, {}, BASE);
-      populateCatSelects();
-      show();
-      updateLast5();
-      updateStats();
-      // IMPORTANT : syncWithFirebase n'est plus lancé automatiquement au chargement.
-      // L'utilisateur doit cliquer sur le bouton SYNC pour synchroniser.
-      toast('R.L ENERGIE chargé – prêt. Clique sur SYNC pour synchroniser.');
-    });
-  </script>
 </body>
 </html>
