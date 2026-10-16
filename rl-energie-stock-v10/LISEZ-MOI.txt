@@ -1,0 +1,7 @@
+R.L ENERGIE - Stock v10 (hors ligne, installable)
+
+MISE EN LIGNE : déposer tous les fichiers à la racine du dépôt GitHub Pages (garder js/ et libs/), ouvrir une fois avec internet.
+MISE À JOUR : changer V en haut de sw.js (rls-v10.0 -> rls-v10.1). Nouveau fichier JS : l'ajouter à sw.js ET index.html.
+ADMIN : Menu > Mode administrateur, mot de passe par défaut admin123 (à changer dans Menu > Changer le mot de passe).
+SYNC : bouton Synchroniser (aussi automatique après chaque mouvement). Réglages dans js/config.js (vide = mode local).
+STOCK : calculé à partir des mouvements ; deux appareils qui saisissent en même temps s'additionnent, rien n'est écrasé.
